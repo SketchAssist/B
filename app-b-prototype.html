@@ -635,8 +635,27 @@ osList.forEach((os,i) => {
 function renderOs(){
   document.querySelectorAll('.os-btn').forEach((b,i) => b.classList.toggle('active', i===curOs));
 }
+const osFileExt = { 'Windows':'exe', 'macOS':'dmg', 'Linux':'AppImage' };
 document.getElementById('dl-btn').onclick = () => {
-  document.getElementById('dl-note').textContent = osList[curOs] + ' 版のダウンロードを開始します（仮の動作）';
+  const os = osList[curOs];
+  const ext = osFileExt[os];
+  const fileName = 'A-Setup-' + os + '-v0.1.0.' + ext + '.txt';
+  const content =
+    'これはアプリA UIプロトタイプのテスト用ダミーファイルです。\n' +
+    '実際のインストーラーではありません。\n\n' +
+    '対象OS: ' + os + '\n' +
+    'バージョン: v0.1.0（仮）\n' +
+    'ダウンロード日時: ' + new Date().toLocaleString('ja-JP') + '\n';
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('dl-note').textContent = os + ' 版のダミーファイル「' + fileName + '」をダウンロードしました（テスト用）';
 };
 function toggleGuide(){
   document.getElementById('guide-box').classList.toggle('open');
