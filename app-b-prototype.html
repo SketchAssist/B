@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App B — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F6F5F0;
+    --surface: #FFFFFF;
+    --ink: #1E2B26;
+    --ink-soft: #55635C;
+    --ink-faint: #93A099;
+    --line: #DAD9D0;
+    --line-strong: #B9C2BB;
+    --accent: #2B6E5F;
+    --accent-soft: #E4EFEA;
+    --accent-deep: #17453B;
+    --amber: #B8863C;
+    --amber-soft: #F5EDDC;
+    --radius: 10px;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:960px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--surface);
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+
+  /* ── Top bar ── */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 32px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--serif);
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .brand .mark{
+    width:28px; height:28px;
+    border:1.5px solid var(--ink);
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:500;
+  }
+  .tabs{
+    display:flex;
+    gap:4px;
+  }
+  .tab{
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    padding:8px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    border:none;
+    background:transparent;
+    transition:background 0.15s, color 0.15s;
+  }
+  .tab:hover{ background:var(--accent-soft); color:var(--accent-deep); }
+  .tab.active{ background:var(--accent); color:#fff; }
+
+  /* ── Screens ── */
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fade 0.25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+
+  /* ── HOME ── */
+  .hero{
+    padding:72px 32px 48px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+  }
+  .hero .glyph{
+    width:56px; height:56px;
+    margin:0 auto 24px;
+    border:1.5px solid var(--ink);
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  .hero h1{
+    font-family:var(--serif);
+    font-size:36px;
+    font-weight:600;
+    max-width:520px;
+    margin:0 auto 16px;
+    line-height:1.3;
+  }
+  .hero p{
+    color:var(--ink-soft);
+    max-width:440px;
+    margin:0 auto;
+    font-size:15px;
+  }
+  .cta-row{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    background:var(--line);
+    border-top:1px solid var(--line);
+  }
+  .cta-card{
+    background:var(--surface);
+    padding:32px 28px;
+    cursor:pointer;
+    transition:background 0.15s;
+  }
+  .cta-card:hover{ background:var(--accent-soft); }
+  .cta-card .num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-bottom:14px;
+  }
+  .cta-card h3{
+    font-family:var(--serif);
+    font-size:19px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .cta-card p{ font-size:13px; color:var(--ink-soft); margin-bottom:16px; }
+  .cta-card .go{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent-deep);
+  }
+
+  /* ── TRY ── */
+  .section-pad{ padding:32px; }
+  .subtabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .subtab{
+    font-family:var(--mono);
+    font-size:12px;
+    padding:8px 14px;
+    border:1px solid var(--line-strong);
+    border-radius:6px;
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .subtab.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent-deep);
+    font-weight:500;
+  }
+
+  .try-layout{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:24px;
+  }
+  .sample-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .sample-thumb{
+    aspect-ratio:1;
+    border-radius:8px;
+    border:1px solid var(--line-strong);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--ink-faint);
+  }
+  .sample-thumb.active{ border:2px solid var(--accent); color:var(--accent-deep); }
+
+  .stage-viewer{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .stage-display{
+    height:280px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:8px;
+    transition:background 0.3s;
+  }
+  .stage-display .label{
+    font-family:var(--mono);
+    font-size:12px;
+    color:rgba(0,0,0,0.45);
+    background:rgba(255,255,255,0.6);
+    padding:4px 10px;
+    border-radius:4px;
+  }
+  .stage-bar{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:16px;
+    border-top:1px solid var(--line);
+    background:var(--bg);
+    flex-wrap:wrap;
+  }
+  .stage-pill{
+    font-family:var(--mono);
+    font-size:12px;
+    padding:7px 13px;
+    border-radius:16px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .stage-pill.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .stage-arrow{ color:var(--ink-faint); font-size:12px; }
+  .nav-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:16px 0 0;
+  }
+  .btn{
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:500;
+    padding:9px 18px;
+    border-radius:8px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .btn.primary{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .btn.primary:hover{ opacity:0.88; }
+
+  /* ── LEARN ── */
+  .learn-layout{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:480px;
+  }
+  .toc{
+    border-right:1px solid var(--line);
+    padding:24px 8px;
+  }
+  .toc-item{
+    font-size:13.5px;
+    padding:8px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .toc-item.active{ background:var(--accent-soft); color:var(--accent-deep); font-weight:500; }
+  .toc-item:hover:not(.active){ background:var(--bg); }
+  .toc-sub{ padding-left:30px; font-size:12.5px; font-family:var(--mono); }
+  .toc-group-label{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding:16px 16px 6px;
+  }
+  .learn-content{ padding:36px 40px; }
+  .learn-content h2{
+    font-family:var(--serif);
+    font-size:24px;
+    font-weight:600;
+    margin-bottom:12px;
+  }
+  .placeholder-line{
+    height:11px;
+    background:var(--bg);
+    border-radius:4px;
+    margin-bottom:9px;
+  }
+  .detail-box{
+    margin-top:20px;
+    border:1px dashed var(--line-strong);
+    border-radius:8px;
+    padding:14px 16px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-faint);
+    cursor:pointer;
+  }
+  .detail-box.open{ color:var(--ink-soft); border-style:solid; }
+
+  /* ── DOWNLOAD ── */
+  .dl-center{
+    text-align:center;
+    padding:64px 32px;
+  }
+  .version-tag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent-deep);
+    background:var(--accent-soft);
+    padding:5px 12px;
+    border-radius:14px;
+    margin-bottom:28px;
+  }
+  .os-row{ display:flex; justify-content:center; gap:8px; margin-bottom:28px; }
+  .os-btn{
+    font-size:13px;
+    font-weight:500;
+    padding:9px 20px;
+    border-radius:8px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .os-btn.active{ border-color:var(--ink); color:var(--ink); background:var(--accent-soft); }
+  .dl-btn{
+    font-family:var(--sans);
+    font-size:15px;
+    font-weight:600;
+    padding:14px 40px;
+    border-radius:10px;
+    border:none;
+    background:var(--ink);
+    color:#fff;
+    cursor:pointer;
+  }
+  .dl-btn:hover{ background:var(--accent-deep); }
+  .dl-note{
+    margin-top:12px;
+    font-size:12px;
+    color:var(--ink-faint);
+    font-family:var(--mono);
+    min-height:16px;
+  }
+  .guide-link{
+    margin-top:24px;
+    font-size:13px;
+    color:var(--accent-deep);
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .guide-box{
+    max-width:420px;
+    margin:20px auto 0;
+    text-align:left;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px;
+    font-size:13px;
+    color:var(--ink-soft);
+    display:none;
+  }
+  .guide-box.open{ display:block; }
+  .guide-box .placeholder-line{ background:var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="mark">A</span>App B</div>
+    <div class="tabs">
+      <button class="tab active" data-screen="home">Home</button>
+      <button class="tab" data-screen="try">Try</button>
+      <button class="tab" data-screen="learn">Learn</button>
+      <button class="tab" data-screen="download">Download</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <section class="screen active" id="screen-home">
+    <div class="hero">
+      <div class="glyph">A</div>
+      <h1>A — 画像を段階的に処理するツール</h1>
+      <p>誰でもすぐに仕組みを試せます。難しい設定は必要ありません。</p>
+    </div>
+    <div class="cta-row">
+      <div class="cta-card" onclick="goTo('try')">
+        <div class="num">01</div>
+        <h3>Try A</h3>
+        <p>サンプル画像でその場で体験する</p>
+        <div class="go">はじめる →</div>
+      </div>
+      <div class="cta-card" onclick="goTo('learn')">
+        <div class="num">02</div>
+        <h3>Learn</h3>
+        <p>使い方をマニュアルで確認する</p>
+        <div class="go">読む →</div>
+      </div>
+      <div class="cta-card" onclick="goTo('download')">
+        <div class="num">03</div>
+        <h3>Download</h3>
+        <p>A本体を入手して使い始める</p>
+        <div class="go">入手する →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRY -->
+  <section class="screen" id="screen-try">
+    <div class="section-pad">
+      <div class="eyebrow">Try — mode</div>
+      <div class="subtabs" id="mode-tabs"></div>
+
+      <div class="try-layout">
+        <div class="sample-list" id="sample-list"></div>
+
+        <div class="stage-viewer">
+          <div class="stage-display" id="stage-display">
+            <div class="label" id="stage-label">Original</div>
+          </div>
+          <div class="stage-bar" id="stage-bar"></div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn" id="btn-prev">← Previous</button>
+        <button class="btn primary" id="btn-next">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section class="screen" id="screen-learn">
+    <div class="learn-layout">
+      <div class="toc" id="toc"></div>
+      <div class="learn-content" id="learn-content"></div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="screen" id="screen-download">
+    <div class="dl-center">
+      <div class="version-tag">Latest version — v0.1.0 (仮)</div>
+      <div class="os-row" id="os-row"></div>
+      <button class="dl-btn" id="dl-btn">Download</button>
+      <div class="dl-note" id="dl-note"></div>
+      <div class="guide-link" onclick="toggleGuide()">Installation guide</div>
+      <div class="guide-box" id="guide-box">
+        <div class="placeholder-line" style="width:70%"></div>
+        <div class="placeholder-line" style="width:90%"></div>
+        <div class="placeholder-line" style="width:55%"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---------- navigation ---------- */
+function goTo(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.screen === name));
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => goTo(t.dataset.screen)));
+
+/* ---------- TRY screen ---------- */
+const modes = [
+  { id:0, name:'Mode 1', hue:'#E4EFEA' },
+  { id:1, name:'Mode 2', hue:'#F5EDDC' },
+  { id:2, name:'Mode 3', hue:'#EAE7F2' },
+  { id:3, name:'Mode 4', hue:'#F2E7E5' }
+];
+const stages = ['Original','Stage 1','Stage 2','Stage 3'];
+let curMode = 0, curStage = 0, curSample = 0;
+const samplesPerMode = 3;
+
+const modeTabsEl = document.getElementById('mode-tabs');
+modes.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'subtab' + (m.id===curMode ? ' active':'');
+  b.textContent = m.name;
+  b.onclick = () => { curMode = m.id; curSample = 0; renderTry(); };
+  modeTabsEl.appendChild(b);
+});
+
+const stageBarEl = document.getElementById('stage-bar');
+stages.forEach((s, i) => {
+  const p = document.createElement('span');
+  p.className = 'stage-pill' + (i===curStage ? ' active':'');
+  p.textContent = s;
+  p.onclick = () => { curStage = i; renderTry(); };
+  stageBarEl.appendChild(p);
+  if(i < stages.length-1){
+    const arrow = document.createElement('span');
+    arrow.className = 'stage-arrow';
+    arrow.textContent = '→';
+    stageBarEl.appendChild(arrow);
+  }
+});
+
+function renderTry(){
+  document.querySelectorAll('#mode-tabs .subtab').forEach((b,i) => b.classList.toggle('active', i===curMode));
+  document.querySelectorAll('#stage-bar .stage-pill').forEach((p,i) => p.classList.toggle('active', i===curStage));
+
+  const sampleListEl = document.getElementById('sample-list');
+  sampleListEl.innerHTML = '';
+  for(let i=0;i<samplesPerMode;i++){
+    const t = document.createElement('div');
+    t.className = 'sample-thumb' + (i===curSample ? ' active':'');
+    t.style.background = modes[curMode].hue;
+    t.textContent = 'S' + (i+1);
+    t.onclick = () => { curSample = i; renderTry(); };
+    sampleListEl.appendChild(t);
+  }
+
+  const disp = document.getElementById('stage-display');
+  const shade = 100 - curStage*12;
+  disp.style.background = modes[curMode].hue;
+  disp.style.filter = 'brightness(' + shade + '%)';
+  document.getElementById('stage-label').textContent = modes[curMode].name + ' / ' + stages[curStage] + ' / Sample ' + (curSample+1) + '（仮画像）';
+}
+document.getElementById('btn-prev').onclick = () => { if(curStage>0){ curStage--; renderTry(); } };
+document.getElementById('btn-next').onclick = () => { if(curStage<stages.length-1){ curStage++; renderTry(); } };
+renderTry();
+
+/* ---------- LEARN screen ---------- */
+const tocData = [
+  { id:'intro', label:'Introduction' },
+  { id:'start', label:'Getting started' },
+  { id:'workflow', label:'Basic workflow', children:[
+    { id:'modes', label:'Modes overview' },
+    { id:'stage1', label:'Stage 1' },
+    { id:'stage2', label:'Stage 2' },
+    { id:'stage3', label:'Stage 3' }
+  ]},
+  { id:'faq', label:'FAQ' }
+];
+let curTopic = 'intro';
+const tocEl = document.getElementById('toc');
+function renderToc(){
+  tocEl.innerHTML = '';
+  tocData.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'toc-item' + (item.id===curTopic ? ' active':'');
+    d.textContent = item.label;
+    d.onclick = () => { curTopic = item.id; renderToc(); renderLearnContent(); };
+    tocEl.appendChild(d);
+    if(item.children){
+      item.children.forEach(c => {
+        const cd = document.createElement('div');
+        cd.className = 'toc-item toc-sub' + (c.id===curTopic ? ' active':'');
+        cd.textContent = c.label;
+        cd.onclick = () => { curTopic = c.id; renderToc(); renderLearnContent(); };
+        tocEl.appendChild(cd);
+      });
+    }
+  });
+}
+function findLabel(id){
+  for(const item of tocData){
+    if(item.id===id) return item.label;
+    if(item.children) for(const c of item.children) if(c.id===id) return c.label;
+  }
+  return id;
+}
+function renderLearnContent(){
+  const el = document.getElementById('learn-content');
+  el.innerHTML = '';
+  const h = document.createElement('h2');
+  h.textContent = findLabel(curTopic);
+  el.appendChild(h);
+  [90,75,60].forEach(w => {
+    const p = document.createElement('div');
+    p.className = 'placeholder-line';
+    p.style.width = w + '%';
+    el.appendChild(p);
+  });
+  const box = document.createElement('div');
+  box.className = 'detail-box';
+  box.textContent = '＋ 詳細説明を表示（仮）';
+  box.onclick = () => {
+    box.classList.toggle('open');
+    box.textContent = box.classList.contains('open') ? '－ 詳細説明（プレースホルダー本文がここに入ります）' : '＋ 詳細説明を表示（仮）';
+  };
+  el.appendChild(box);
+}
+renderToc();
+renderLearnContent();
+
+/* ---------- DOWNLOAD screen ---------- */
+const osList = ['Windows','macOS','Linux'];
+let curOs = 0;
+const osRowEl = document.getElementById('os-row');
+osList.forEach((os,i) => {
+  const b = document.createElement('button');
+  b.className = 'os-btn' + (i===curOs ? ' active':'');
+  b.textContent = os;
+  b.onclick = () => { curOs = i; renderOs(); };
+  osRowEl.appendChild(b);
+});
+function renderOs(){
+  document.querySelectorAll('.os-btn').forEach((b,i) => b.classList.toggle('active', i===curOs));
+}
+document.getElementById('dl-btn').onclick = () => {
+  document.getElementById('dl-note').textContent = osList[curOs] + ' 版のダウンロードを開始します（仮の動作）';
+};
+function toggleGuide(){
+  document.getElementById('guide-box').classList.toggle('open');
+}
+</script>
+</body>
+</html>
