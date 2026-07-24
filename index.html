@@ -25,374 +25,115 @@
     --sans: 'Inter', -apple-system, sans-serif;
     --mono: 'IBM Plex Mono', monospace;
   }
+  html[data-theme="dark"]{
+    --bg: #121815;
+    --surface: #182420;
+    --ink: #E9EFEA;
+    --ink-soft: #A9B6AF;
+    --ink-faint: #6C7A72;
+    --line: #2A3833;
+    --line-strong: #3C4C45;
+    --accent: #5BAF98;
+    --accent-soft: #1E3730;
+    --accent-deep: #8FD4BC;
+    --amber: #D6A968;
+    --amber-soft: #33291A;
+  }
+  html{ background:var(--bg); transition:background 0.2s; }
+  body{ transition:background 0.2s, color 0.2s; }
+  .stage-display, .sample-thumb{ transition:background 0.3s, filter 0.3s, transform 0.15s; }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:var(--sans);
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-  .app{
-    max-width:960px;
-    margin:0 auto;
-    min-height:100vh;
-    background:var(--surface);
-    border-left:1px solid var(--line);
-    border-right:1px solid var(--line);
-  }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .app{ max-width:960px; margin:0 auto; min-height:100vh; background:var(--surface); border-left:1px solid var(--line); border-right:1px solid var(--line); }
 
-  /* ── Top bar ── */
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:20px 32px;
-    border-bottom:1px solid var(--line);
-  }
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:var(--serif);
-    font-size:19px;
-    font-weight:600;
-    letter-spacing:0.01em;
-  }
-  .brand .mark{
-    width:28px; height:28px;
-    border:1.5px solid var(--ink);
-    border-radius:6px;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono);
-    font-size:12px;
-    font-weight:500;
-  }
-  .tabs{
-    display:flex;
-    gap:4px;
-  }
-  .tab{
-    font-family:var(--sans);
-    font-size:14px;
-    font-weight:500;
-    color:var(--ink-soft);
-    padding:8px 16px;
-    border-radius:20px;
-    cursor:pointer;
-    border:none;
-    background:transparent;
-    transition:background 0.15s, color 0.15s;
-  }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:20px 32px; border-bottom:1px solid var(--line); }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:19px; font-weight:600; letter-spacing:0.01em; }
+  .brand .mark{ width:28px; height:28px; border:1.5px solid var(--ink); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; font-weight:500; }
+  .topbar-right{ display:flex; align-items:center; gap:18px; }
+  .tabs{ display:flex; gap:4px; }
+  .tab{ font-family:var(--sans); font-size:14px; font-weight:500; color:var(--ink-soft); padding:8px 16px; border-radius:20px; cursor:pointer; border:none; background:transparent; transition:background 0.15s, color 0.15s; }
   .tab:hover{ background:var(--accent-soft); color:var(--accent-deep); }
   .tab.active{ background:var(--accent); color:#fff; }
+  .lang-switch{ display:flex; border:1px solid var(--line-strong); border-radius:16px; overflow:hidden; font-family:var(--mono); font-size:11px; }
+  .lang-btn{ padding:5px 11px; border:none; background:var(--surface); color:var(--ink-soft); cursor:pointer; }
+  .lang-btn.active{ background:var(--ink); color:var(--bg); }
+  .theme-btn{ width:28px; height:28px; border-radius:50%; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .theme-btn:hover{ border-color:var(--accent); color:var(--accent-deep); }
 
-  /* ── Screens ── */
   .screen{ display:none; }
   .screen.active{ display:block; animation:fade 0.25s ease; }
   @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--ink-faint); text-transform:uppercase; margin-bottom:10px; }
 
-  .eyebrow{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:0.08em;
-    color:var(--ink-faint);
-    text-transform:uppercase;
-    margin-bottom:10px;
-  }
-
-  /* ── HOME ── */
-  .hero{
-    padding:72px 32px 48px;
-    text-align:center;
-    border-bottom:1px solid var(--line);
-  }
-  .hero .glyph{
-    width:56px; height:56px;
-    margin:0 auto 24px;
-    border:1.5px solid var(--ink);
-    border-radius:12px;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono);
-    font-size:13px;
-  }
-  .hero h1{
-    font-family:var(--serif);
-    font-size:36px;
-    font-weight:600;
-    max-width:520px;
-    margin:0 auto 16px;
-    line-height:1.3;
-  }
-  .hero p{
-    color:var(--ink-soft);
-    max-width:440px;
-    margin:0 auto;
-    font-size:15px;
-  }
-  .cta-row{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:1px;
-    background:var(--line);
-    border-top:1px solid var(--line);
-  }
-  .cta-card{
-    background:var(--surface);
-    padding:32px 28px;
-    cursor:pointer;
-    transition:background 0.15s;
-  }
+  .hero{ padding:72px 32px 48px; text-align:center; border-bottom:1px solid var(--line); }
+  .hero .glyph{ width:56px; height:56px; margin:0 auto 24px; border:1.5px solid var(--ink); border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; }
+  .hero h1{ font-family:var(--serif); font-size:34px; font-weight:600; max-width:540px; margin:0 auto 16px; line-height:1.3; }
+  .hero p{ color:var(--ink-soft); max-width:460px; margin:0 auto; font-size:15px; }
+  .cta-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border-top:1px solid var(--line); }
+  .cta-card{ background:var(--surface); padding:32px 28px; cursor:pointer; transition:background 0.15s; }
   .cta-card:hover{ background:var(--accent-soft); }
-  .cta-card .num{
-    font-family:var(--mono);
-    font-size:11px;
-    color:var(--ink-faint);
-    margin-bottom:14px;
-  }
-  .cta-card h3{
-    font-family:var(--serif);
-    font-size:19px;
-    font-weight:600;
-    margin-bottom:8px;
-  }
+  .cta-card .num{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:14px; }
+  .cta-card h3{ font-family:var(--serif); font-size:19px; font-weight:600; margin-bottom:8px; }
   .cta-card p{ font-size:13px; color:var(--ink-soft); margin-bottom:16px; }
-  .cta-card .go{
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--accent-deep);
-  }
+  .cta-card .go{ font-family:var(--mono); font-size:12px; color:var(--accent-deep); }
 
-  /* ── TRY ── */
   .section-pad{ padding:32px; }
-  .subtabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:24px;
-    flex-wrap:wrap;
-  }
-  .subtab{
-    font-family:var(--mono);
-    font-size:12px;
-    padding:8px 14px;
-    border:1px solid var(--line-strong);
-    border-radius:6px;
-    background:var(--surface);
-    color:var(--ink-soft);
-    cursor:pointer;
-  }
-  .subtab.active{
-    border-color:var(--accent);
-    background:var(--accent-soft);
-    color:var(--accent-deep);
-    font-weight:500;
-  }
+  .subtabs{ display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .subtab{ font-family:var(--mono); font-size:12px; padding:8px 14px; border:1px solid var(--line-strong); border-radius:6px; background:var(--surface); color:var(--ink-soft); cursor:pointer; }
+  .subtab.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-deep); font-weight:500; }
+  .mode-desc{ font-size:13px; color:var(--ink-soft); margin-bottom:20px; min-height:18px; }
 
-  .try-layout{
-    display:grid;
-    grid-template-columns:120px 1fr;
-    gap:24px;
-  }
-  .sample-list{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .sample-thumb{
-    aspect-ratio:1;
-    border-radius:8px;
-    border:1px solid var(--line-strong);
-    cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono);
-    font-size:10px;
-    color:var(--ink-faint);
-  }
-  .sample-thumb.active{ border:2px solid var(--accent); color:var(--accent-deep); }
+  .try-layout{ display:grid; grid-template-columns:120px 1fr; gap:24px; }
+  .sample-list{ display:flex; flex-direction:column; gap:8px; }
+  .sample-thumb{ position:relative; aspect-ratio:1; border-radius:8px; border:1px solid var(--line-strong); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; color:rgba(30,43,38,0.5); transition:transform 0.15s; }
+  .sample-thumb.active{ border:2px solid var(--accent); color:var(--accent-deep); transform:scale(1.04); }
+  .sample-thumb.active::after{ content:''; position:absolute; right:-17px; top:50%; width:10px; height:2px; background:var(--accent); }
 
-  .stage-viewer{
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    overflow:hidden;
-  }
-  .stage-display{
-    height:280px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    gap:8px;
-    transition:background 0.3s;
-  }
-  .stage-display .label{
-    font-family:var(--mono);
-    font-size:12px;
-    color:rgba(0,0,0,0.45);
-    background:rgba(255,255,255,0.6);
-    padding:4px 10px;
-    border-radius:4px;
-  }
-  .stage-bar{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-    padding:16px;
-    border-top:1px solid var(--line);
-    background:var(--bg);
-    flex-wrap:wrap;
-  }
-  .stage-pill{
-    font-family:var(--mono);
-    font-size:12px;
-    padding:7px 13px;
-    border-radius:16px;
-    border:1px solid var(--line-strong);
-    background:var(--surface);
-    color:var(--ink-soft);
-    cursor:pointer;
-  }
+  .stage-viewer{ border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .stage-display{ height:260px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; transition:background 0.3s; }
+  .stage-display .glyph-big{ font-size:64px; line-height:1; color:rgba(30,43,38,0.55); transition:color 0.3s; }
+  .stage-display .label{ font-family:var(--mono); font-size:12px; color:rgba(0,0,0,0.45); background:rgba(255,255,255,0.6); padding:4px 10px; border-radius:4px; }
+  .stage-display .badge{ font-family:var(--mono); font-size:10px; color:rgba(0,0,0,0.35); }
+  .stage-bar{ display:flex; align-items:center; justify-content:center; gap:6px; padding:16px; border-top:1px solid var(--line); background:var(--bg); flex-wrap:wrap; }
+  .stage-pill{ font-family:var(--mono); font-size:12px; padding:7px 13px; border-radius:16px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; }
   .stage-pill.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
   .stage-arrow{ color:var(--ink-faint); font-size:12px; }
-  .nav-row{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    padding:16px 0 0;
-  }
-  .btn{
-    font-family:var(--sans);
-    font-size:13px;
-    font-weight:500;
-    padding:9px 18px;
-    border-radius:8px;
-    border:1px solid var(--line-strong);
-    background:var(--surface);
-    color:var(--ink);
-    cursor:pointer;
-  }
+  .nav-row{ display:flex; justify-content:center; gap:10px; padding:16px 0 0; }
+  .btn{ font-family:var(--sans); font-size:13px; font-weight:500; padding:9px 18px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); cursor:pointer; }
   .btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
   .btn.primary{ background:var(--ink); color:#fff; border-color:var(--ink); }
   .btn.primary:hover{ opacity:0.88; }
 
-  /* ── LEARN ── */
-  .learn-layout{
-    display:grid;
-    grid-template-columns:220px 1fr;
-    min-height:480px;
-  }
-  .toc{
-    border-right:1px solid var(--line);
-    padding:24px 8px;
-  }
-  .toc-item{
-    font-size:13.5px;
-    padding:8px 16px;
-    border-radius:6px;
-    cursor:pointer;
-    color:var(--ink-soft);
-  }
+  .own-photo-banner{ margin-top:28px; border:1px solid var(--line); border-radius:var(--radius); padding:24px 28px; background:var(--accent-soft); display:none; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .own-photo-banner.show{ display:flex; animation:fade 0.3s ease; }
+  .own-photo-banner .txt h4{ font-family:var(--serif); font-size:16px; font-weight:600; margin-bottom:4px; color:var(--accent-deep); }
+  .own-photo-banner .txt p{ font-size:13px; color:var(--ink-soft); }
+  .own-photo-banner .btn.primary{ white-space:nowrap; }
+
+  .learn-layout{ display:grid; grid-template-columns:230px 1fr; min-height:480px; }
+  .toc{ border-right:1px solid var(--line); padding:24px 8px; }
+  .toc-item{ font-size:13.5px; padding:8px 16px; border-radius:6px; cursor:pointer; color:var(--ink-soft); }
   .toc-item.active{ background:var(--accent-soft); color:var(--accent-deep); font-weight:500; }
   .toc-item:hover:not(.active){ background:var(--bg); }
   .toc-sub{ padding-left:30px; font-size:12.5px; font-family:var(--mono); }
-  .toc-group-label{
-    font-family:var(--mono);
-    font-size:10px;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-    color:var(--ink-faint);
-    padding:16px 16px 6px;
-  }
+  .toc-group-label{ font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint); padding:16px 16px 6px; }
   .learn-content{ padding:36px 40px; }
-  .learn-content h2{
-    font-family:var(--serif);
-    font-size:24px;
-    font-weight:600;
-    margin-bottom:12px;
-  }
-  .placeholder-line{
-    height:11px;
-    background:var(--bg);
-    border-radius:4px;
-    margin-bottom:9px;
-  }
-  .detail-box{
-    margin-top:20px;
-    border:1px dashed var(--line-strong);
-    border-radius:8px;
-    padding:14px 16px;
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--ink-faint);
-    cursor:pointer;
-  }
+  .learn-content h2{ font-family:var(--serif); font-size:23px; font-weight:600; margin-bottom:14px; }
+  .try-link{ display:inline-block; font-family:var(--mono); font-size:11px; color:var(--accent-deep); background:var(--accent-soft); padding:4px 10px; border-radius:12px; margin-bottom:16px; cursor:pointer; }
+  .placeholder-line{ height:11px; background:var(--bg); border-radius:4px; margin-bottom:9px; }
+  .detail-box{ margin-top:20px; border:1px dashed var(--line-strong); border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:12px; color:var(--ink-faint); cursor:pointer; }
   .detail-box.open{ color:var(--ink-soft); border-style:solid; }
 
-  /* ── DOWNLOAD ── */
-  .dl-center{
-    text-align:center;
-    padding:64px 32px;
-  }
-  .version-tag{
-    display:inline-block;
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--accent-deep);
-    background:var(--accent-soft);
-    padding:5px 12px;
-    border-radius:14px;
-    margin-bottom:28px;
-  }
+  .dl-center{ text-align:center; padding:64px 32px; }
+  .version-tag{ display:inline-block; font-family:var(--mono); font-size:12px; color:var(--accent-deep); background:var(--accent-soft); padding:5px 12px; border-radius:14px; margin-bottom:28px; }
   .os-row{ display:flex; justify-content:center; gap:8px; margin-bottom:28px; }
-  .os-btn{
-    font-size:13px;
-    font-weight:500;
-    padding:9px 20px;
-    border-radius:8px;
-    border:1px solid var(--line-strong);
-    background:var(--surface);
-    color:var(--ink-soft);
-    cursor:pointer;
-  }
+  .os-btn{ font-size:13px; font-weight:500; padding:9px 20px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; }
   .os-btn.active{ border-color:var(--ink); color:var(--ink); background:var(--accent-soft); }
-  .dl-btn{
-    font-family:var(--sans);
-    font-size:15px;
-    font-weight:600;
-    padding:14px 40px;
-    border-radius:10px;
-    border:none;
-    background:var(--ink);
-    color:#fff;
-    cursor:pointer;
-  }
+  .dl-btn{ font-family:var(--sans); font-size:15px; font-weight:600; padding:14px 40px; border-radius:10px; border:none; background:var(--ink); color:#fff; cursor:pointer; }
   .dl-btn:hover{ background:var(--accent-deep); }
-  .dl-note{
-    margin-top:12px;
-    font-size:12px;
-    color:var(--ink-faint);
-    font-family:var(--mono);
-    min-height:16px;
-  }
-  .guide-link{
-    margin-top:24px;
-    font-size:13px;
-    color:var(--accent-deep);
-    cursor:pointer;
-    text-decoration:underline;
-    text-underline-offset:3px;
-  }
-  .guide-box{
-    max-width:420px;
-    margin:20px auto 0;
-    text-align:left;
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:16px 18px;
-    font-size:13px;
-    color:var(--ink-soft);
-    display:none;
-  }
+  .dl-note{ margin-top:12px; font-size:12px; color:var(--ink-faint); font-family:var(--mono); min-height:16px; }
+  .guide-link{ margin-top:24px; font-size:13px; color:var(--accent-deep); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+  .guide-box{ max-width:420px; margin:20px auto 0; text-align:left; border:1px solid var(--line); border-radius:8px; padding:16px 18px; font-size:13px; color:var(--ink-soft); display:none; }
   .guide-box.open{ display:block; }
   .guide-box .placeholder-line{ background:var(--bg); }
 </style>
@@ -402,68 +143,82 @@
 <div class="app">
   <div class="topbar">
     <div class="brand"><span class="mark">A</span>App B</div>
-    <div class="tabs">
-      <button class="tab active" data-screen="home">Home</button>
-      <button class="tab" data-screen="try">Try</button>
-      <button class="tab" data-screen="learn">Learn</button>
-      <button class="tab" data-screen="download">Download</button>
+    <div class="topbar-right">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-screen="home"></button>
+        <button class="tab" data-screen="try"></button>
+        <button class="tab" data-screen="learn"></button>
+        <button class="tab" data-screen="download"></button>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="ja">JA</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <button class="theme-btn" id="theme-btn" title="Toggle light / dark">◐</button>
     </div>
   </div>
 
-  <!-- HOME -->
   <section class="screen active" id="screen-home">
     <div class="hero">
       <div class="glyph">A</div>
-      <h1>A — 画像を段階的に処理するツール</h1>
-      <p>誰でもすぐに仕組みを試せます。難しい設定は必要ありません。</p>
+      <h1 id="home-title"></h1>
+      <p id="home-desc"></p>
     </div>
     <div class="cta-row">
       <div class="cta-card" onclick="goTo('try')">
         <div class="num">01</div>
-        <h3>Try A</h3>
-        <p>サンプル画像でその場で体験する</p>
-        <div class="go">はじめる →</div>
+        <h3 id="cta1-title"></h3>
+        <p id="cta1-desc"></p>
+        <div class="go" id="cta1-go"></div>
       </div>
       <div class="cta-card" onclick="goTo('learn')">
         <div class="num">02</div>
-        <h3>Learn</h3>
-        <p>使い方をマニュアルで確認する</p>
-        <div class="go">読む →</div>
+        <h3 id="cta2-title"></h3>
+        <p id="cta2-desc"></p>
+        <div class="go" id="cta2-go"></div>
       </div>
       <div class="cta-card" onclick="goTo('download')">
         <div class="num">03</div>
-        <h3>Download</h3>
-        <p>A本体を入手して使い始める</p>
-        <div class="go">入手する →</div>
+        <h3 id="cta3-title"></h3>
+        <p id="cta3-desc"></p>
+        <div class="go" id="cta3-go"></div>
       </div>
     </div>
   </section>
 
-  <!-- TRY -->
   <section class="screen" id="screen-try">
     <div class="section-pad">
-      <div class="eyebrow">Try — mode</div>
+      <div class="eyebrow" id="try-eyebrow"></div>
       <div class="subtabs" id="mode-tabs"></div>
+      <div class="mode-desc" id="mode-desc"></div>
 
       <div class="try-layout">
         <div class="sample-list" id="sample-list"></div>
-
         <div class="stage-viewer">
           <div class="stage-display" id="stage-display">
-            <div class="label" id="stage-label">Original</div>
+            <div class="glyph-big" id="stage-glyph"></div>
+            <div class="badge" id="stage-badge"></div>
+            <div class="label" id="stage-label"></div>
           </div>
           <div class="stage-bar" id="stage-bar"></div>
         </div>
       </div>
 
       <div class="nav-row">
-        <button class="btn" id="btn-prev">← Previous</button>
-        <button class="btn primary" id="btn-next">Next →</button>
+        <button class="btn" id="btn-prev"></button>
+        <button class="btn primary" id="btn-next"></button>
+      </div>
+
+      <div class="own-photo-banner" id="own-photo-banner">
+        <div class="txt">
+          <h4 id="banner-title"></h4>
+          <p id="banner-desc"></p>
+        </div>
+        <button class="btn primary" onclick="goTo('download')" id="banner-btn"></button>
       </div>
     </div>
   </section>
 
-  <!-- LEARN -->
   <section class="screen" id="screen-learn">
     <div class="learn-layout">
       <div class="toc" id="toc"></div>
@@ -471,14 +226,13 @@
     </div>
   </section>
 
-  <!-- DOWNLOAD -->
   <section class="screen" id="screen-download">
     <div class="dl-center">
-      <div class="version-tag">Latest version — v0.1.0 (仮)</div>
+      <div class="version-tag" id="dl-version"></div>
       <div class="os-row" id="os-row"></div>
-      <button class="dl-btn" id="dl-btn">Download</button>
+      <button class="dl-btn" id="dl-btn"></button>
       <div class="dl-note" id="dl-note"></div>
-      <div class="guide-link" onclick="toggleGuide()">Installation guide</div>
+      <div class="guide-link" id="guide-link" onclick="toggleGuide()"></div>
       <div class="guide-box" id="guide-box">
         <div class="placeholder-line" style="width:70%"></div>
         <div class="placeholder-line" style="width:90%"></div>
@@ -490,112 +244,258 @@
 </div>
 
 <script>
-/* ---------- navigation ---------- */
+/* =========================================================
+   STR — 全UI文字列（コードから分離）。ja / en を切替可能にする。
+   ========================================================= */
+const STR = {
+  ja: {
+    nav: { home:'Home', try:'Try', learn:'Learn', download:'Download' },
+    home: {
+      title:'A — 画像を段階的に処理するツール',
+      desc:'誰でもすぐに仕組みを試せます。難しい設定は必要ありません。',
+      cta1_title:'Try A', cta1_desc:'サンプルでその場で体験する', cta1_go:'はじめる →',
+      cta2_title:'Learn', cta2_desc:'Aの考え方と使い方を理解する', cta2_go:'読む →',
+      cta3_title:'Download', cta3_desc:'A本体を入手して使い始める', cta3_go:'入手する →'
+    },
+    try: {
+      eyebrow:'Try — mode',
+      prev:'← Previous', next:'Next →',
+      stage_names:['Original','Stage 1','Stage 2','Stage 3'],
+      banner_title:'自分の写真で試してみたくなったら',
+      banner_desc:'Web版はサンプルのみの体験です。ご自身の画像を処理するにはA本体をダウンロードしてください。',
+      banner_btn:'Download A',
+      modes:[
+        { name:'Mode 1', desc:'仮の説明文（Mode 1）' },
+        { name:'Mode 2', desc:'仮の説明文（Mode 2）' },
+        { name:'Mode 3', desc:'仮の説明文（Mode 3）' },
+        { name:'Mode 4', desc:'仮の説明文（Mode 4）' }
+      ],
+      result_note:'A本体で事前に生成された結果を表示（仮）'
+    },
+    learn: {
+      toc:[
+        { id:'intro', label:'Introduction' },
+        { id:'what_is_a', label:'What is A', indent:true },
+        { id:'why_diagrams', label:'Why diagrams, not photos', indent:true },
+        { id:'academic_diagram', label:'What is an academic diagram', indent:true },
+        { id:'start', label:'Getting started' },
+        { id:'workflow', label:'Basic workflow' },
+        { id:'modes', label:'Modes overview', indent:true },
+        { id:'stage1', label:'Stage 1 の意味', indent:true },
+        { id:'stage2', label:'Stage 2 の意味', indent:true },
+        { id:'stage3', label:'Stage 3 の意味', indent:true },
+        { id:'use_cases', label:'Use cases（対象研究）' },
+        { id:'using_a', label:'Using A本体' },
+        { id:'faq', label:'FAQ' }
+      ],
+      try_link:'Tryで見た内容を確認する →'
+    },
+    download: {
+      version:'Latest version — v0.1.0（仮）',
+      dl:'Download',
+      guide:'Installation guide',
+      note_dl:(os,name)=> os + ' 版のダミーファイル「' + name + '」をダウンロードしました（テスト用）'
+    }
+  },
+  en: {
+    nav: { home:'Home', try:'Try', learn:'Learn', download:'Download' },
+    home: {
+      title:'A — a tool for staged image processing',
+      desc:'Try it right away — no setup required.',
+      cta1_title:'Try A', cta1_desc:'Experience it now with samples', cta1_go:'Start →',
+      cta2_title:'Learn', cta2_desc:'Understand the ideas behind A', cta2_go:'Read →',
+      cta3_title:'Download', cta3_desc:'Get A and start using it', cta3_go:'Get it →'
+    },
+    try: {
+      eyebrow:'Try — mode',
+      prev:'← Previous', next:'Next →',
+      stage_names:['Original','Stage 1','Stage 2','Stage 3'],
+      banner_title:'Want to try it with your own photos?',
+      banner_desc:'This web preview only shows sample images. Download A to process your own images.',
+      banner_btn:'Download A',
+      modes:[
+        { name:'Mode 1', desc:'Placeholder description (Mode 1)' },
+        { name:'Mode 2', desc:'Placeholder description (Mode 2)' },
+        { name:'Mode 3', desc:'Placeholder description (Mode 3)' },
+        { name:'Mode 4', desc:'Placeholder description (Mode 4)' }
+      ],
+      result_note:'Showing a pre-generated result from A (placeholder)'
+    },
+    learn: {
+      toc:[
+        { id:'intro', label:'Introduction' },
+        { id:'what_is_a', label:'What is A', indent:true },
+        { id:'why_diagrams', label:'Why diagrams, not photos', indent:true },
+        { id:'academic_diagram', label:'What is an academic diagram', indent:true },
+        { id:'start', label:'Getting started' },
+        { id:'workflow', label:'Basic workflow' },
+        { id:'modes', label:'Modes overview', indent:true },
+        { id:'stage1', label:'Meaning of Stage 1', indent:true },
+        { id:'stage2', label:'Meaning of Stage 2', indent:true },
+        { id:'stage3', label:'Meaning of Stage 3', indent:true },
+        { id:'use_cases', label:'Use cases' },
+        { id:'using_a', label:'Using A' },
+        { id:'faq', label:'FAQ' }
+      ],
+      try_link:'Revisit what you saw in Try →'
+    },
+    download: {
+      version:'Latest version — v0.1.0 (placeholder)',
+      dl:'Download',
+      guide:'Installation guide',
+      note_dl:(os,name)=> 'Downloaded a dummy file for ' + os + ': "' + name + '" (test only)'
+    }
+  }
+};
+
+/* =========================================================
+   画像/サンプルデータ（言語非依存）。実運用ではA本体で
+   生成済みの画像パスに差し替える。今はプレースホルダー色。
+   ========================================================= */
+const MODE_HUES = ['#E4EFEA','#F5EDDC','#EAE7F2','#F2E7E5'];
+const SAMPLE_GLYPHS = ['●','■','▲'];
+const SAMPLES_PER_MODE = 3;
+const OS_LIST = [
+  { key:'Windows', ext:'exe' },
+  { key:'macOS', ext:'dmg' },
+  { key:'Linux', ext:'AppImage' }
+];
+
+let lang = 'ja';
+let curMode = 0, curStage = 0, curSample = 0, curOs = 0, curTopic = 'intro';
+
+function t(){ return STR[lang]; }
+
+/* ---------- top nav / lang switch ---------- */
 function goTo(name){
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.screen === name));
+  document.querySelectorAll('.tab').forEach(tb => tb.classList.toggle('active', tb.dataset.screen === name));
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
 }
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => goTo(t.dataset.screen)));
+document.querySelectorAll('.tab').forEach(tb => tb.addEventListener('click', () => goTo(tb.dataset.screen)));
+document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => {
+  lang = b.dataset.lang;
+  document.querySelectorAll('.lang-btn').forEach(x => x.classList.toggle('active', x.dataset.lang === lang));
+  renderAll();
+}));
+
+document.getElementById('theme-btn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  if(next === 'dark'){ root.setAttribute('data-theme','dark'); }
+  else{ root.removeAttribute('data-theme'); }
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '◑' : '◐';
+});
+
+/* ---------- render: static text blocks ---------- */
+function renderStaticText(){
+  const s = t();
+  document.getElementById('tabs').children[0].textContent = s.nav.home;
+  document.getElementById('tabs').children[1].textContent = s.nav.try;
+  document.getElementById('tabs').children[2].textContent = s.nav.learn;
+  document.getElementById('tabs').children[3].textContent = s.nav.download;
+
+  document.getElementById('home-title').textContent = s.home.title;
+  document.getElementById('home-desc').textContent = s.home.desc;
+  document.getElementById('cta1-title').textContent = s.home.cta1_title;
+  document.getElementById('cta1-desc').textContent = s.home.cta1_desc;
+  document.getElementById('cta1-go').textContent = s.home.cta1_go;
+  document.getElementById('cta2-title').textContent = s.home.cta2_title;
+  document.getElementById('cta2-desc').textContent = s.home.cta2_desc;
+  document.getElementById('cta2-go').textContent = s.home.cta2_go;
+  document.getElementById('cta3-title').textContent = s.home.cta3_title;
+  document.getElementById('cta3-desc').textContent = s.home.cta3_desc;
+  document.getElementById('cta3-go').textContent = s.home.cta3_go;
+
+  document.getElementById('try-eyebrow').textContent = s.try.eyebrow;
+  document.getElementById('btn-prev').textContent = s.try.prev;
+  document.getElementById('btn-next').textContent = s.try.next;
+  document.getElementById('banner-title').textContent = s.try.banner_title;
+  document.getElementById('banner-desc').textContent = s.try.banner_desc;
+  document.getElementById('banner-btn').textContent = s.try.banner_btn;
+
+  document.getElementById('dl-version').textContent = s.download.version;
+  document.getElementById('dl-btn').textContent = s.download.dl;
+  document.getElementById('guide-link').textContent = s.download.guide;
+}
 
 /* ---------- TRY screen ---------- */
-const modes = [
-  { id:0, name:'Mode 1', hue:'#E4EFEA' },
-  { id:1, name:'Mode 2', hue:'#F5EDDC' },
-  { id:2, name:'Mode 3', hue:'#EAE7F2' },
-  { id:3, name:'Mode 4', hue:'#F2E7E5' }
-];
-const stages = ['Original','Stage 1','Stage 2','Stage 3'];
-let curMode = 0, curStage = 0, curSample = 0;
-const samplesPerMode = 3;
-
-const modeTabsEl = document.getElementById('mode-tabs');
-modes.forEach(m => {
-  const b = document.createElement('button');
-  b.className = 'subtab' + (m.id===curMode ? ' active':'');
-  b.textContent = m.name;
-  b.onclick = () => { curMode = m.id; curSample = 0; renderTry(); };
-  modeTabsEl.appendChild(b);
-});
-
-const stageBarEl = document.getElementById('stage-bar');
-stages.forEach((s, i) => {
-  const p = document.createElement('span');
-  p.className = 'stage-pill' + (i===curStage ? ' active':'');
-  p.textContent = s;
-  p.onclick = () => { curStage = i; renderTry(); };
-  stageBarEl.appendChild(p);
-  if(i < stages.length-1){
-    const arrow = document.createElement('span');
-    arrow.className = 'stage-arrow';
-    arrow.textContent = '→';
-    stageBarEl.appendChild(arrow);
-  }
-});
-
+function renderModeTabs(){
+  const el = document.getElementById('mode-tabs');
+  el.innerHTML = '';
+  t().try.modes.forEach((m,i) => {
+    const b = document.createElement('button');
+    b.className = 'subtab' + (i===curMode ? ' active':'');
+    b.textContent = m.name;
+    b.onclick = () => { curMode = i; curSample = 0; curStage = 0; renderTry(); };
+    el.appendChild(b);
+  });
+}
+function renderStageBar(){
+  const el = document.getElementById('stage-bar');
+  el.innerHTML = '';
+  t().try.stage_names.forEach((sN,i) => {
+    const p = document.createElement('span');
+    p.className = 'stage-pill' + (i===curStage ? ' active':'');
+    p.textContent = sN;
+    p.onclick = () => { curStage = i; renderTry(); };
+    el.appendChild(p);
+    if(i < t().try.stage_names.length-1){
+      const a = document.createElement('span');
+      a.className = 'stage-arrow';
+      a.textContent = '→';
+      el.appendChild(a);
+    }
+  });
+}
 function renderTry(){
+  const s = t();
+  document.getElementById('mode-desc').textContent = s.try.modes[curMode].desc;
   document.querySelectorAll('#mode-tabs .subtab').forEach((b,i) => b.classList.toggle('active', i===curMode));
   document.querySelectorAll('#stage-bar .stage-pill').forEach((p,i) => p.classList.toggle('active', i===curStage));
 
   const sampleListEl = document.getElementById('sample-list');
   sampleListEl.innerHTML = '';
-  for(let i=0;i<samplesPerMode;i++){
-    const t = document.createElement('div');
-    t.className = 'sample-thumb' + (i===curSample ? ' active':'');
-    t.style.background = modes[curMode].hue;
-    t.textContent = 'S' + (i+1);
-    t.onclick = () => { curSample = i; renderTry(); };
-    sampleListEl.appendChild(t);
+  for(let i=0;i<SAMPLES_PER_MODE;i++){
+    const el = document.createElement('div');
+    el.className = 'sample-thumb' + (i===curSample ? ' active':'');
+    el.style.background = MODE_HUES[curMode];
+    el.textContent = SAMPLE_GLYPHS[i];
+    el.title = 'Sample ' + (i+1);
+    el.onclick = () => { curSample = i; renderTry(); };
+    sampleListEl.appendChild(el);
   }
 
   const disp = document.getElementById('stage-display');
-  const shade = 100 - curStage*12;
-  disp.style.background = modes[curMode].hue;
-  disp.style.filter = 'brightness(' + shade + '%)';
-  document.getElementById('stage-label').textContent = modes[curMode].name + ' / ' + stages[curStage] + ' / Sample ' + (curSample+1) + '（仮画像）';
+  disp.style.background = MODE_HUES[curMode];
+  disp.style.filter = 'brightness(' + (100 - curStage*12) + '%)';
+  document.getElementById('stage-badge').textContent = s.try.result_note;
+  document.getElementById('stage-label').textContent =
+    s.try.modes[curMode].name + ' / ' + s.try.stage_names[curStage] + ' / Sample ' + (curSample+1);
+  const glyphEl = document.getElementById('stage-glyph');
+  glyphEl.textContent = SAMPLE_GLYPHS[curSample];
+  glyphEl.style.opacity = 0.35 + curStage*0.2;
+
+  const isLast = curStage === s.try.stage_names.length - 1;
+  document.getElementById('own-photo-banner').classList.toggle('show', isLast);
 }
 document.getElementById('btn-prev').onclick = () => { if(curStage>0){ curStage--; renderTry(); } };
-document.getElementById('btn-next').onclick = () => { if(curStage<stages.length-1){ curStage++; renderTry(); } };
-renderTry();
+document.getElementById('btn-next').onclick = () => { if(curStage < t().try.stage_names.length-1){ curStage++; renderTry(); } };
 
 /* ---------- LEARN screen ---------- */
-const tocData = [
-  { id:'intro', label:'Introduction' },
-  { id:'start', label:'Getting started' },
-  { id:'workflow', label:'Basic workflow', children:[
-    { id:'modes', label:'Modes overview' },
-    { id:'stage1', label:'Stage 1' },
-    { id:'stage2', label:'Stage 2' },
-    { id:'stage3', label:'Stage 3' }
-  ]},
-  { id:'faq', label:'FAQ' }
-];
-let curTopic = 'intro';
-const tocEl = document.getElementById('toc');
 function renderToc(){
-  tocEl.innerHTML = '';
-  tocData.forEach(item => {
+  const el = document.getElementById('toc');
+  el.innerHTML = '';
+  t().learn.toc.forEach(item => {
     const d = document.createElement('div');
-    d.className = 'toc-item' + (item.id===curTopic ? ' active':'');
+    d.className = 'toc-item' + (item.indent ? ' toc-sub':'') + (item.id===curTopic ? ' active':'');
     d.textContent = item.label;
     d.onclick = () => { curTopic = item.id; renderToc(); renderLearnContent(); };
-    tocEl.appendChild(d);
-    if(item.children){
-      item.children.forEach(c => {
-        const cd = document.createElement('div');
-        cd.className = 'toc-item toc-sub' + (c.id===curTopic ? ' active':'');
-        cd.textContent = c.label;
-        cd.onclick = () => { curTopic = c.id; renderToc(); renderLearnContent(); };
-        tocEl.appendChild(cd);
-      });
-    }
+    el.appendChild(d);
   });
 }
 function findLabel(id){
-  for(const item of tocData){
-    if(item.id===id) return item.label;
-    if(item.children) for(const c of item.children) if(c.id===id) return c.label;
-  }
-  return id;
+  const found = t().learn.toc.find(x => x.id === id);
+  return found ? found.label : id;
 }
 function renderLearnContent(){
   const el = document.getElementById('learn-content');
@@ -603,63 +503,78 @@ function renderLearnContent(){
   const h = document.createElement('h2');
   h.textContent = findLabel(curTopic);
   el.appendChild(h);
+
+  if(curTopic.startsWith('stage') || curTopic === 'modes'){
+    const link = document.createElement('div');
+    link.className = 'try-link';
+    link.textContent = t().learn.try_link;
+    link.onclick = () => goTo('try');
+    el.appendChild(link);
+  }
+
   [90,75,60].forEach(w => {
     const p = document.createElement('div');
     p.className = 'placeholder-line';
     p.style.width = w + '%';
     el.appendChild(p);
   });
+
   const box = document.createElement('div');
   box.className = 'detail-box';
-  box.textContent = '＋ 詳細説明を表示（仮）';
+  const closedText = lang === 'ja' ? '＋ 詳細説明を表示（仮）' : '+ Show details (placeholder)';
+  const openText = lang === 'ja' ? '－ 詳細説明（プレースホルダー本文）' : '− Details (placeholder body text)';
+  box.textContent = closedText;
   box.onclick = () => {
     box.classList.toggle('open');
-    box.textContent = box.classList.contains('open') ? '－ 詳細説明（プレースホルダー本文がここに入ります）' : '＋ 詳細説明を表示（仮）';
+    box.textContent = box.classList.contains('open') ? openText : closedText;
   };
   el.appendChild(box);
 }
-renderToc();
-renderLearnContent();
 
 /* ---------- DOWNLOAD screen ---------- */
-const osList = ['Windows','macOS','Linux'];
-let curOs = 0;
-const osRowEl = document.getElementById('os-row');
-osList.forEach((os,i) => {
-  const b = document.createElement('button');
-  b.className = 'os-btn' + (i===curOs ? ' active':'');
-  b.textContent = os;
-  b.onclick = () => { curOs = i; renderOs(); };
-  osRowEl.appendChild(b);
-});
-function renderOs(){
-  document.querySelectorAll('.os-btn').forEach((b,i) => b.classList.toggle('active', i===curOs));
+function renderOsRow(){
+  const el = document.getElementById('os-row');
+  el.innerHTML = '';
+  OS_LIST.forEach((os,i) => {
+    const b = document.createElement('button');
+    b.className = 'os-btn' + (i===curOs ? ' active':'');
+    b.textContent = os.key;
+    b.onclick = () => { curOs = i; renderOsRow(); };
+    el.appendChild(b);
+  });
 }
-const osFileExt = { 'Windows':'exe', 'macOS':'dmg', 'Linux':'AppImage' };
 document.getElementById('dl-btn').onclick = () => {
-  const os = osList[curOs];
-  const ext = osFileExt[os];
-  const fileName = 'A-Setup-' + os + '-v0.1.0.' + ext + '.txt';
+  const os = OS_LIST[curOs];
+  const fileName = 'A-Setup-' + os.key + '-v0.1.0.' + os.ext + '.txt';
   const content =
-    'これはアプリA UIプロトタイプのテスト用ダミーファイルです。\n' +
-    '実際のインストーラーではありません。\n\n' +
-    '対象OS: ' + os + '\n' +
-    'バージョン: v0.1.0（仮）\n' +
-    'ダウンロード日時: ' + new Date().toLocaleString('ja-JP') + '\n';
+    (lang==='ja'
+      ? 'これはアプリA UIプロトタイプのテスト用ダミーファイルです。\n実際のインストーラーではありません。\n\n'
+      : 'This is a dummy test file for the App A UI prototype.\nThis is not a real installer.\n\n') +
+    'OS: ' + os.key + '\n' +
+    'Version: v0.1.0\n' +
+    (lang==='ja' ? 'ダウンロード日時: ' : 'Downloaded: ') + new Date().toLocaleString(lang==='ja'?'ja-JP':'en-US') + '\n';
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  document.getElementById('dl-note').textContent = os + ' 版のダミーファイル「' + fileName + '」をダウンロードしました（テスト用）';
+  document.getElementById('dl-note').textContent = t().download.note_dl(os.key, fileName);
 };
-function toggleGuide(){
-  document.getElementById('guide-box').classList.toggle('open');
+function toggleGuide(){ document.getElementById('guide-box').classList.toggle('open'); }
+
+/* ---------- full render ---------- */
+function renderAll(){
+  renderStaticText();
+  renderModeTabs();
+  renderStageBar();
+  renderTry();
+  renderToc();
+  renderLearnContent();
+  renderOsRow();
+  document.getElementById('dl-note').textContent = '';
 }
+renderAll();
 </script>
 </body>
 </html>
