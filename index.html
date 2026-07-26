@@ -309,6 +309,7 @@
 
 </div>
 
+<script src="images-data.js"></script>
 <script>
 /* =========================================================
    STR — 全UI文字列（コードから分離、ja / en 切替）
@@ -462,8 +463,11 @@ function imagePath(modeIdx, stageIdx){
 
 /* 仮の暫定画像：本物の写真が各パスに用意されるまで、
    すべてのモード・ステージでこの1枚を代わりに表示する。
-   該当パスに本物の画像が置かれれば、そちらが自動的に優先される。 */
-const TEMP_IMAGE = 'assets/samples/insect/sample1/original.jpg';
+   このプレビュー環境は外部の assets/ ファイルを読み込めないことがあるため、
+   仮画像はHTMLに直接埋め込み、何もしなくても必ず表示されるようにしている。
+   本物の画像を assets/samples/{mode}/sample1/{stage}.jpg に置けば、
+   そちらが自動的に優先される（ローカルでファイルを開いた場合）。 */
+const TEMP_IMAGE = (typeof IMAGE_DATA !== 'undefined' && IMAGE_DATA['insect/sample1/original']) || '';
 
 
 let lang = 'ja';
