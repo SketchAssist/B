@@ -111,6 +111,14 @@
   .viewer .stage-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); }
   .viewer .handfix-canvas{ position:absolute; inset:0; width:100%; height:100%; z-index:2; display:none; }
   .viewer .handfix-canvas.on{ display:block; }
+  .viewer .scale-preview{ z-index:3; pointer-events:none; }
+  .text-layer{ position:absolute; inset:0; z-index:4; display:none; pointer-events:none; }
+  .text-layer.on{ display:block; }
+  .text-layer.placing{ pointer-events:auto; cursor:text; }
+  .text-box{ position:absolute; pointer-events:auto; min-width:70px; background:rgba(255,255,255,0.85); border:1px dashed var(--accent); border-radius:4px; }
+  html[data-theme="dark"] .text-box{ background:rgba(24,36,32,0.85); }
+  .tb-handle{ position:absolute; top:-16px; left:-1px; width:16px; height:14px; background:var(--accent); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; cursor:move; border-radius:3px 3px 0 0; }
+  .tb-text{ padding:4px 6px 4px 6px; font-size:13px; color:var(--ink); min-width:60px; outline:none; }
   .handfix-toolbar{ display:none; align-items:center; gap:8px; padding:10px 20px 0; flex-wrap:wrap; }
   .handfix-toolbar.show{ display:flex; }
   .hf-label{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; }
@@ -122,6 +130,9 @@
   .work-left-tools .t.tool-active span{ color:var(--accent-deep); }
   .work-left-tools .t{ cursor:pointer; position:relative; }
   .txt-icon{ font-family:Georgia, 'Times New Roman', serif; font-weight:700; font-size:17px; border-bottom:2px solid currentColor; line-height:1.1; padding-bottom:1px; }
+  .undo-redo-group{ display:none; flex-direction:column; gap:6px; margin-top:2px; }
+  .undo-redo-group.show{ display:flex; }
+  .undo-redo-btn{ font-size:16px; }
   .scale-unit-select{ display:none; position:absolute; left:40px; top:2px; z-index:10; font-size:11px; padding:3px 4px; border-radius:6px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); }
   .work-left-tools .t.tool-active .scale-unit-select{ display:block; }
   .viewer .lasso-svg{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
@@ -279,6 +290,10 @@
               <option value="px">px</option>
             </select>
           </div>
+          <div class="undo-redo-group" id="undo-redo-group">
+            <button class="t undo-redo-btn" id="hf-undo-btn" title="Undo">↶</button>
+            <button class="t undo-redo-btn" id="hf-redo-btn" title="Redo">↷</button>
+          </div>
         </div>
 
         <div class="work-main">
@@ -289,16 +304,13 @@
             <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
             <span class="hf-sep"></span>
             <button class="hf-btn" id="hf-canvas-toggle"></button>
-            <span class="hf-sep"></span>
-            <button class="hf-btn" id="hf-undo-btn" title="Undo">↶</button>
-            <button class="hf-btn" id="hf-redo-btn" title="Redo">↷</button>
-            <span class="hf-sep"></span>
-            <button class="hf-btn" id="hf-download-btn"></button>
           </div>
 
           <div class="viewer" id="stage-display">
             <img class="stage-img" id="stage-img" alt="">
             <canvas class="handfix-canvas" id="handfix-canvas"></canvas>
+            <canvas class="handfix-canvas scale-preview" id="scale-preview-canvas"></canvas>
+            <div class="text-layer" id="text-layer"></div>
             <svg class="lasso-svg" id="lasso-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             <div class="glyph-big" id="stage-glyph"></div>
             <div class="badge" id="stage-badge"></div>
@@ -392,7 +404,7 @@ const STR = {
         { name:'投げ縄選択', desc:'対象物を投げ縄で囲んで選択範囲を指定する（Stage 1）', button:'lasso', secondary:'対象を囲む', note:'※ 投げ縄で対象を囲んでから「実行」してください' },
         { name:'特徴線強調', desc:'陰影・テクスチャを除去し特徴線を強調する（Stage 2、Stage 1と同時実行）', button:'none' },
         { name:'エッジ抽出', desc:'特徴線強調画像から構造エッジを抽出する（Stage 3）', button:'run' },
-        { name:'手書き修正', desc:'部位マップを参照しながらペン・消しゴムで手書き修正する', button:'run' }
+        { name:'手書き修正', desc:'部位マップを参照しながらペン・消しゴムで手書き修正する', button:'none' }
       ]
     },
     learn: {
@@ -456,7 +468,7 @@ const STR = {
         { name:'Lasso selection', desc:'Lasso the subject to mark the selection area (Stage 1)', button:'lasso', secondary:'Draw lasso', note:'※ Draw a lasso around the subject, then press "Run".' },
         { name:'Feature line enhancement', desc:'Remove shading/texture and enhance feature lines (Stage 2, runs together with Stage 1)', button:'none' },
         { name:'Edge extraction', desc:'Extract structural edges from the enhanced image (Stage 3)', button:'run' },
-        { name:'Hand-drawn correction', desc:'Manually correct with pen/eraser, referencing the part map', button:'run' }
+        { name:'Hand-drawn correction', desc:'Manually correct with pen/eraser, referencing the part map', button:'none' }
       ]
     },
     learn: {
@@ -597,12 +609,22 @@ function resetLasso(){
   const canvas = document.getElementById('handfix-canvas');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if(window._clearTextBoxes) window._clearTextBoxes();
 }
 function pointToPct(evt, svg){
-  const rect = svg.getBoundingClientRect();
-  const x = ((evt.clientX - rect.left) / rect.width) * 100;
-  const y = ((evt.clientY - rect.top) / rect.height) * 100;
-  return [Math.max(0,Math.min(100,x)), Math.max(0,Math.min(100,y))];
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX;
+  pt.y = evt.clientY;
+  const ctm = svg.getScreenCTM();
+  if(!ctm){
+    // フォールバック：CTMが取得できない場合は矩形ベースで計算
+    const rect = svg.getBoundingClientRect();
+    const x = ((evt.clientX - rect.left) / rect.width) * 100;
+    const y = ((evt.clientY - rect.top) / rect.height) * 100;
+    return [Math.max(0,Math.min(100,x)), Math.max(0,Math.min(100,y))];
+  }
+  const svgP = pt.matrixTransform(ctm.inverse());
+  return [Math.max(0,Math.min(100,svgP.x)), Math.max(0,Math.min(100,svgP.y))];
 }
 function drawLassoPreview(){
   const svg = document.getElementById('lasso-svg');
@@ -685,40 +707,19 @@ document.getElementById('hf-undo-btn').addEventListener('click', () => {
 document.getElementById('hf-redo-btn').addEventListener('click', () => {
   if(window._handfixRedo) window._handfixRedo();
 });
-document.getElementById('hf-download-btn').addEventListener('click', () => {
-  downloadHandfixArtwork();
+document.getElementById('export-btn').addEventListener('click', () => {
+  downloadHandfixCanvas();
 });
-function downloadHandfixArtwork(){
-  const viewer = document.getElementById('stage-display');
-  const rect = viewer.getBoundingClientRect();
-  const out = document.createElement('canvas');
-  out.width = Math.max(1, Math.round(rect.width));
-  out.height = Math.max(1, Math.round(rect.height));
-  const octx = out.getContext('2d');
-  octx.fillStyle = '#ffffff';
-  octx.fillRect(0, 0, out.width, out.height);
-
-  function finish(){
-    const canvas = document.getElementById('handfix-canvas');
-    if(handfixCanvasOn){ octx.drawImage(canvas, 0, 0, out.width, out.height); }
-    const link = document.createElement('a');
-    link.download = 'sketchassist-handfix.png';
-    link.href = out.toDataURL('image/png');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  const stageImg = document.getElementById('stage-img');
-  if(handfixBg !== -1 && stageImg.style.display !== 'none' && stageImg.src){
-    const bgImg = new Image();
-    bgImg.crossOrigin = 'anonymous';
-    bgImg.onload = () => { octx.drawImage(bgImg, 0, 0, out.width, out.height); finish(); };
-    bgImg.onerror = () => { finish(); };
-    bgImg.src = stageImg.src;
-  } else {
-    finish();
-  }
+function downloadHandfixCanvas(){
+  // エクスポートするのはcanvas（手描き部分）そのもの。背景は含めない。
+  const canvas = document.getElementById('handfix-canvas');
+  if(!canvas.width || !canvas.height) return;
+  const link = document.createElement('a');
+  link.download = 'sketchassist-handfix.png';
+  link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 /* ---------- 手書き修正：キャンバスに描画（背景をなぞって作業できる） ---------- */
@@ -726,40 +727,105 @@ function setHandfixTool(toolName){
   handfixTool = toolName;
   document.getElementById('tool-pen').classList.toggle('tool-active', toolName === 'pen');
   document.getElementById('tool-eraser').classList.toggle('tool-active', toolName === 'eraser');
+  document.getElementById('tool-text').classList.toggle('tool-active', toolName === 'text');
+  document.getElementById('tool-scale').classList.toggle('tool-active', toolName === 'scale');
+  const textLayer = document.getElementById('text-layer');
+  textLayer.classList.toggle('placing', toolName === 'text');
 }
 document.getElementById('tool-pen').addEventListener('click', () => setHandfixTool('pen'));
 document.getElementById('tool-eraser').addEventListener('click', () => setHandfixTool('eraser'));
+document.getElementById('tool-text').addEventListener('click', () => setHandfixTool('text'));
 setHandfixTool('pen');
 
 document.getElementById('tool-scale').addEventListener('click', (e) => {
   if(e.target.id === 'scale-unit-select') return; // ドロップダウン自体のクリックは無視
-  document.getElementById('tool-scale').classList.toggle('tool-active');
+  setHandfixTool('scale');
 });
 document.getElementById('scale-unit-select').addEventListener('click', (e) => e.stopPropagation());
+
+/* ---------- 手書き修正：テキストボックスをドロップして配置 ---------- */
+(function setupTextLayer(){
+  const layer = document.getElementById('text-layer');
+  let dragBox = null, dragOffsetX = 0, dragOffsetY = 0;
+
+  function createTextBox(x, y){
+    const box = document.createElement('div');
+    box.className = 'text-box';
+    box.style.left = x + 'px';
+    box.style.top = y + 'px';
+
+    const handle = document.createElement('div');
+    handle.className = 'tb-handle';
+    handle.textContent = '⠿';
+    box.appendChild(handle);
+
+    const textEl = document.createElement('div');
+    textEl.className = 'tb-text';
+    textEl.contentEditable = 'true';
+    box.appendChild(textEl);
+
+    layer.appendChild(box);
+    textEl.focus();
+
+    handle.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      dragBox = box;
+      const boxRect = box.getBoundingClientRect();
+      dragOffsetX = e.clientX - boxRect.left;
+      dragOffsetY = e.clientY - boxRect.top;
+      handle.setPointerCapture(e.pointerId);
+    });
+  }
+
+  layer.addEventListener('pointerdown', (e) => {
+    if(e.target === layer && handfixTool === 'text'){
+      const rect = layer.getBoundingClientRect();
+      createTextBox(e.clientX - rect.left, e.clientY - rect.top);
+    }
+  });
+  layer.addEventListener('pointermove', (e) => {
+    if(!dragBox) return;
+    const rect = layer.getBoundingClientRect();
+    dragBox.style.left = (e.clientX - rect.left - dragOffsetX) + 'px';
+    dragBox.style.top = (e.clientY - rect.top - dragOffsetY) + 'px';
+  });
+  window.addEventListener('pointerup', () => { dragBox = null; });
+
+  window._clearTextBoxes = () => { layer.innerHTML = ''; };
+})();
+
 
 (function setupHandfixCanvas(){
   const canvas = document.getElementById('handfix-canvas');
   const ctx = canvas.getContext('2d');
+  const previewCanvas = document.getElementById('scale-preview-canvas');
+  const pctx = previewCanvas.getContext('2d');
   let lastX = 0, lastY = 0;
   let undoStack = [];
   let redoStack = [];
+  let scaleStart = null;
 
   function syncCanvasSize(){
     const rect = canvas.getBoundingClientRect();
     if(rect.width === 0 || rect.height === 0) return;
     const w = Math.round(rect.width), h = Math.round(rect.height);
-    if(canvas.width === w && canvas.height === h) return; // 既に一致していれば何もしない（描画内容を保持）
-    // サイズがずれていた場合、内容を退避してから正しいサイズへ合わせ直す
-    let snapshot = null;
-    if(canvas.width > 0 && canvas.height > 0){
-      snapshot = document.createElement('canvas');
-      snapshot.width = canvas.width;
-      snapshot.height = canvas.height;
-      snapshot.getContext('2d').drawImage(canvas, 0, 0);
+    if(canvas.width !== w || canvas.height !== h){
+      // サイズがずれていた場合、内容を退避してから正しいサイズへ合わせ直す
+      let snapshot = null;
+      if(canvas.width > 0 && canvas.height > 0){
+        snapshot = document.createElement('canvas');
+        snapshot.width = canvas.width;
+        snapshot.height = canvas.height;
+        snapshot.getContext('2d').drawImage(canvas, 0, 0);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      if(snapshot){ ctx.drawImage(snapshot, 0, 0, w, h); }
     }
-    canvas.width = w;
-    canvas.height = h;
-    if(snapshot){ ctx.drawImage(snapshot, 0, 0, w, h); }
+    if(previewCanvas.width !== w || previewCanvas.height !== h){
+      previewCanvas.width = w;
+      previewCanvas.height = h;
+    }
   }
   window.addEventListener('resize', syncCanvasSize);
 
@@ -796,11 +862,48 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     const next = redoStack.pop();
     restoreSnapshot(next);
   };
-  window._handfixClearHistory = () => { undoStack = []; redoStack = []; };
+
+  function currentUnit(){
+    return document.getElementById('scale-unit-select').value;
+  }
+  function drawScaleLine(targetCtx, p1, p2, live){
+    const dx = p2[0]-p1[0], dy = p2[1]-p1[1];
+    const dist = Math.round(Math.sqrt(dx*dx + dy*dy));
+    targetCtx.save();
+    targetCtx.lineCap = 'round';
+    targetCtx.strokeStyle = live ? 'rgba(43,110,95,0.85)' : '#111';
+    targetCtx.lineWidth = live ? 2 : 3;
+    if(live){ targetCtx.setLineDash([6,4]); }
+    targetCtx.beginPath();
+    targetCtx.moveTo(p1[0], p1[1]);
+    targetCtx.lineTo(p2[0], p2[1]);
+    targetCtx.stroke();
+    // 端のヒゲ（Wordの目盛り線ふうに両端に短い縦線を入れる）
+    const angle = Math.atan2(dy, dx);
+    const tick = 6;
+    [p1, p2].forEach(p => {
+      targetCtx.beginPath();
+      targetCtx.moveTo(p[0] - Math.sin(angle)*tick, p[1] + Math.cos(angle)*tick);
+      targetCtx.lineTo(p[0] + Math.sin(angle)*tick, p[1] - Math.cos(angle)*tick);
+      targetCtx.stroke();
+    });
+    targetCtx.setLineDash([]);
+    targetCtx.font = '12px sans-serif';
+    targetCtx.fillStyle = live ? 'rgba(43,110,95,0.9)' : '#111';
+    const midX = (p1[0]+p2[0])/2, midY = (p1[1]+p2[1])/2;
+    targetCtx.fillText(dist + ' ' + currentUnit(), midX + 6, midY - 6);
+    targetCtx.restore();
+  }
 
   canvas.addEventListener('pointerdown', (e) => {
     if(curStage !== 4 || !handfixCanvasOn) return;
     syncCanvasSize();
+    if(handfixTool === 'scale'){
+      scaleStart = posFromEvent(e);
+      handfixDrawing = true;
+      canvas.setPointerCapture(e.pointerId);
+      return;
+    }
     pushUndoSnapshot();
     handfixDrawing = true;
     [lastX, lastY] = posFromEvent(e);
@@ -808,6 +911,12 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
   });
   canvas.addEventListener('pointermove', (e) => {
     if(!handfixDrawing) return;
+    if(handfixTool === 'scale'){
+      const cur = posFromEvent(e);
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      drawScaleLine(pctx, scaleStart, cur, true);
+      return;
+    }
     const [x, y] = posFromEvent(e);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -825,8 +934,21 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     ctx.stroke();
     [lastX, lastY] = [x, y];
   });
-  canvas.addEventListener('pointerup', () => { handfixDrawing = false; });
-  canvas.addEventListener('pointerleave', () => { handfixDrawing = false; });
+  canvas.addEventListener('pointerup', (e) => {
+    if(handfixTool === 'scale' && handfixDrawing && scaleStart){
+      const end = posFromEvent(e);
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      pushUndoSnapshot();
+      ctx.globalCompositeOperation = 'source-over';
+      drawScaleLine(ctx, scaleStart, end, false);
+      scaleStart = null;
+    }
+    handfixDrawing = false;
+  });
+  canvas.addEventListener('pointerleave', () => {
+    if(handfixTool === 'scale'){ pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height); }
+    handfixDrawing = false;
+  });
 
   // 手書き修正タブに入るたびキャンバスサイズを合わせておく
   window._resizeHandfixCanvas = syncCanvasSize;
@@ -957,6 +1079,7 @@ function renderTry(){
   if(curStage === 4){
     // 手書き修正：背景レイヤー + キャンバスレイヤー
     hfToolbar.classList.add('show');
+    document.getElementById('undo-redo-group').classList.add('show');
     lassoSvg.innerHTML = '';
     lassoSvg.classList.remove('drawing');
     renderHandfixBgButtons();
@@ -973,16 +1096,20 @@ function renderTry(){
       };
     }
     canvas.classList.toggle('on', handfixCanvasOn);
+    document.getElementById('scale-preview-canvas').classList.toggle('on', handfixCanvasOn);
+    document.getElementById('text-layer').classList.add('on');
     if(handfixCanvasOn && window._resizeHandfixCanvas){
       window._resizeHandfixCanvas();
     }
     document.getElementById('hf-canvas-toggle').textContent = handfixCanvasOn ? s.try.hf_canvas_on : s.try.hf_canvas_off;
-    document.getElementById('hf-download-btn').textContent = '⭳ ' + s.try.hf_download;
     document.getElementById('hf-canvas-toggle').classList.toggle('active', !handfixCanvasOn);
     glyphEl.style.display = 'none';
   } else {
     hfToolbar.classList.remove('show');
+    document.getElementById('undo-redo-group').classList.remove('show');
     canvas.classList.remove('on');
+    document.getElementById('scale-preview-canvas').classList.remove('on');
+    document.getElementById('text-layer').classList.remove('on');
     const path = imagePath(curMode, curStage);
     stageImg.src = path;
     stageImg.style.display = 'block';
