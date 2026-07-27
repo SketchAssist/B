@@ -458,15 +458,16 @@ const OS_LIST = [
 function imagePath(modeIdx, stageIdx){
   // 投げ縄選択（stage1）は、投げ縄で範囲を指定するまでは元の写真をそのまま表示する
   const key = stageIdx === 1 ? STAGE_KEYS[0] : STAGE_KEYS[stageIdx];
-  return 'assets/samples/' + MODE_KEYS[modeIdx] + '/sample1/' + key + '.jpg';
+  // ファイル名だけで区別するフラット構成（リポジトリ直下に置くだけでよい）
+  // 例: insect-original.jpg, insect-feature.jpg, plant-edge.jpg ...
+  return MODE_KEYS[modeIdx] + '-' + key + '.jpg';
 }
 
 /* 仮の暫定画像：本物の写真が各パスに用意されるまで、
    すべてのモード・ステージでこの1枚を代わりに表示する。
-   画像は images-data.js のような専用ファイルではなく、
-   assets/samples/ 配下に置いた実ファイルをそのまま参照する。
-   該当パスに本物の画像が置かれれば、そちらが自動的に優先される。 */
-const TEMP_IMAGE = 'assets/samples/insect/sample1/original.jpg';
+   画像はリポジトリ直下に置いた実ファイルをそのまま参照する。
+   該当ファイルが本物の画像に差し替えられれば、そちらが自動的に優先される。 */
+const TEMP_IMAGE = 'insect-original.jpg';
 
 
 let lang = 'ja';
