@@ -109,6 +109,9 @@
 
   .viewer{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:var(--bg); overflow:hidden; min-height:260px; }
   .viewer .stage-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); }
+  .viewer .lasso-svg{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
+  .viewer .lasso-svg.drawing{ pointer-events:auto; cursor:crosshair; }
+  .lasso-path{ fill:rgba(91,175,152,0.25); stroke:var(--accent); stroke-width:0.4; stroke-dasharray:1.2 0.8; }
   .viewer .glyph-big{ position:relative; font-size:56px; color:rgba(30,43,38,0.4); display:none; }
   .viewer .badge{ position:absolute; top:10px; left:10px; font-family:var(--mono); font-size:10px; color:rgba(0,0,0,0.5); background:rgba(255,255,255,0.75); padding:3px 8px; border-radius:4px; z-index:2; }
   .viewer .label{ position:absolute; bottom:10px; font-family:var(--mono); font-size:11px; color:rgba(0,0,0,0.55); background:rgba(255,255,255,0.75); padding:4px 10px; border-radius:4px; z-index:2; }
@@ -139,6 +142,9 @@
   .stage-card .sc-desc{ font-size:11px; color:var(--ink-soft); line-height:1.4; }
   .stage-card .sc-thumb{ width:36px; height:36px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--bg); position:relative; }
   .stage-card .sc-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .sc-btn{ display:block; width:100%; margin-top:8px; font-size:12px; padding:8px 10px; text-align:center; }
+  .sc-btn-secondary{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+  .sc-note{ font-size:10.5px; color:var(--amber); margin-top:6px; line-height:1.4; }
 
   .own-photo-banner{ margin:16px 20px; border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; background:var(--accent-soft); display:none; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .own-photo-banner.show{ display:flex; animation:fade 0.3s ease; }
@@ -257,6 +263,7 @@
 
           <div class="viewer" id="stage-display">
             <img class="stage-img" id="stage-img" alt="">
+            <svg class="lasso-svg" id="lasso-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             <div class="glyph-big" id="stage-glyph"></div>
             <div class="badge" id="stage-badge"></div>
             <div class="label" id="stage-label"></div>
@@ -340,11 +347,11 @@ const STR = {
       ],
       mode_soon_name:'汎用モード（試作中・近日公開）',
       stages:[
-        { name:'元の写真', desc:'アップロード済みの原本画像' },
-        { name:'投げ縄選択', desc:'対象物を投げ縄で囲んで選択範囲を指定する' },
-        { name:'特徴線強調', desc:'陰影・テクスチャを除去し特徴線を強調する' },
-        { name:'エッジ抽出', desc:'特徴線強調画像から構造エッジを抽出する' },
-        { name:'手書き修正', desc:'部位マップを参照しながらペン・消しゴムで手書き修正する' }
+        { name:'元の写真', desc:'アップロード済みの原本画像', button:'none' },
+        { name:'投げ縄選択', desc:'対象物を投げ縄で囲んで選択範囲を指定する（Stage 1）', button:'lasso', secondary:'対象を囲む', note:'※ 投げ縄で対象を囲んでから「実行」してください' },
+        { name:'特徴線強調', desc:'陰影・テクスチャを除去し特徴線を強調する（Stage 2、Stage 1と同時実行）', button:'none' },
+        { name:'エッジ抽出', desc:'特徴線強調画像から構造エッジを抽出する（Stage 3）', button:'run' },
+        { name:'手書き修正', desc:'部位マップを参照しながらペン・消しゴムで手書き修正する', button:'run' }
       ]
     },
     learn: {
@@ -399,11 +406,11 @@ const STR = {
       ],
       mode_soon_name:'General mode (in development)',
       stages:[
-        { name:'Original photo', desc:'The uploaded source image' },
-        { name:'Lasso selection', desc:'Lasso the subject to mark the selection area' },
-        { name:'Feature line enhancement', desc:'Remove shading/texture and enhance feature lines' },
-        { name:'Edge extraction', desc:'Extract structural edges from the enhanced image' },
-        { name:'Hand-drawn correction', desc:'Manually correct with pen/eraser, referencing the part map' }
+        { name:'Original photo', desc:'The uploaded source image', button:'none' },
+        { name:'Lasso selection', desc:'Lasso the subject to mark the selection area (Stage 1)', button:'lasso', secondary:'Draw lasso', note:'※ Draw a lasso around the subject, then press "Run".' },
+        { name:'Feature line enhancement', desc:'Remove shading/texture and enhance feature lines (Stage 2, runs together with Stage 1)', button:'none' },
+        { name:'Edge extraction', desc:'Extract structural edges from the enhanced image (Stage 3)', button:'run' },
+        { name:'Hand-drawn correction', desc:'Manually correct with pen/eraser, referencing the part map', button:'run' }
       ]
     },
     learn: {
@@ -440,7 +447,7 @@ const STR = {
    ========================================================= */
 const MODE_KEYS = ['insect','plant','fossil','artifact'];
 const STAGE_KEYS = ['original','lasso','feature','edge','handfix'];
-const TOPTAB_STAGE_COUNT = 4; // 元写真〜エッジ抽出はタブ、手書き修正はカードの実行で進む
+const TOPTAB_STAGE_COUNT = 5; // 元写真〜手書き修正まで、すべてタブで直接切替できる
 const SAMPLE_GLYPH = '●';
 const OS_LIST = [
   { key:'Windows', ext:'exe' },
@@ -449,7 +456,9 @@ const OS_LIST = [
 ];
 
 function imagePath(modeIdx, stageIdx){
-  return 'assets/samples/' + MODE_KEYS[modeIdx] + '/sample1/' + STAGE_KEYS[stageIdx] + '.jpg';
+  // 投げ縄選択（stage1）は、投げ縄で範囲を指定するまでは元の写真をそのまま表示する
+  const key = stageIdx === 1 ? STAGE_KEYS[0] : STAGE_KEYS[stageIdx];
+  return 'assets/samples/' + MODE_KEYS[modeIdx] + '/sample1/' + key + '.jpg';
 }
 
 /* 仮の暫定画像：本物の写真が各パスに用意されるまで、
@@ -461,6 +470,9 @@ const TEMP_IMAGE = 'assets/samples/insect/sample1/original.jpg';
 
 
 let lang = 'ja';
+let lassoPoints = [];      // 描いた投げ縄の頂点（%座標）
+let lassoIsDrawing = false;
+let lassoApplied = false;  // 「実行」で範囲確定済みか
 let curMode = 0, curStage = 0, curOs = 0, curTopic = 'intro';
 
 function t(){ return STR[lang]; }
@@ -520,6 +532,73 @@ function renderStaticText(){
 }
 
 /* ---------- TRY ---------- */
+/* ---------- 投げ縄選択（実際にドラッグして範囲を描ける） ---------- */
+function resetLasso(){
+  lassoPoints = [];
+  lassoIsDrawing = false;
+  lassoApplied = false;
+  const svg = document.getElementById('lasso-svg');
+  svg.innerHTML = '';
+  svg.classList.remove('drawing');
+  document.getElementById('stage-img').style.clipPath = '';
+}
+function pointToPct(evt, svg){
+  const rect = svg.getBoundingClientRect();
+  const x = ((evt.clientX - rect.left) / rect.width) * 100;
+  const y = ((evt.clientY - rect.top) / rect.height) * 100;
+  return [Math.max(0,Math.min(100,x)), Math.max(0,Math.min(100,y))];
+}
+function drawLassoPreview(){
+  const svg = document.getElementById('lasso-svg');
+  svg.innerHTML = '';
+  if(lassoPoints.length < 2) return;
+  const pts = lassoPoints.map(p => p.join(',')).join(' ');
+  const el = document.createElementNS('http://www.w3.org/2000/svg', lassoIsDrawing ? 'polyline' : 'polygon');
+  el.setAttribute('points', pts);
+  el.setAttribute('class', 'lasso-path');
+  svg.appendChild(el);
+}
+function startLassoDrawing(){
+  lassoPoints = [];
+  lassoIsDrawing = false;
+  lassoApplied = false;
+  document.getElementById('stage-img').style.clipPath = '';
+  const svg = document.getElementById('lasso-svg');
+  svg.innerHTML = '';
+  svg.classList.add('drawing');
+}
+(function setupLassoPointerEvents(){
+  const svg = document.getElementById('lasso-svg');
+  svg.addEventListener('pointerdown', (e) => {
+    if(!svg.classList.contains('drawing')) return;
+    lassoIsDrawing = true;
+    lassoPoints = [pointToPct(e, svg)];
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if(!lassoIsDrawing) return;
+    lassoPoints.push(pointToPct(e, svg));
+    drawLassoPreview();
+  });
+  svg.addEventListener('pointerup', () => {
+    if(!lassoIsDrawing) return;
+    lassoIsDrawing = false;
+    svg.classList.remove('drawing');
+    if(lassoPoints.length < 3){ lassoPoints = []; }
+    drawLassoPreview();
+  });
+})();
+function runLassoStage(){
+  curStage = 1;
+  if(lassoPoints.length >= 3){
+    const clip = 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
+    document.getElementById('stage-img').style.clipPath = clip;
+    lassoApplied = true;
+    curStage = 2; // 特徴線強調はStage1と同時実行のため、自動的に進める
+  }
+  renderTry();
+}
+
 function renderModeGrid(){
   const el = document.getElementById('mode-grid');
   el.innerHTML = '';
@@ -527,7 +606,7 @@ function renderModeGrid(){
     const b = document.createElement('button');
     b.className = 'mode-chip' + (i===curMode ? ' active':'');
     b.textContent = m.name;
-    b.onclick = () => { curMode = i; curStage = 0; renderTry(); };
+    b.onclick = () => { curMode = i; curStage = 0; resetLasso(); renderTry(); };
     el.appendChild(b);
   });
   const soon = document.createElement('button');
@@ -557,7 +636,6 @@ function renderStageCards(){
     const card = document.createElement('div');
     const isDone = i <= curStage;
     card.className = 'stage-card' + (i===curStage ? ' active':'') + (isDone ? ' done':'');
-    const needsRun = i >= TOPTAB_STAGE_COUNT;
 
     const num = document.createElement('div');
     num.className = 'sc-num';
@@ -574,12 +652,27 @@ function renderStageCards(){
     desc.textContent = st.desc;
     body.appendChild(title);
     body.appendChild(desc);
-    if(needsRun){
+
+    if(st.button === 'lasso'){
+      const secBtn = document.createElement('button');
+      secBtn.className = 'btn sc-btn sc-btn-secondary';
+      secBtn.textContent = st.secondary;
+      secBtn.onclick = (e) => { e.stopPropagation(); curStage = 1; renderTry(); startLassoDrawing(); };
+      body.appendChild(secBtn);
+
+      const note = document.createElement('div');
+      note.className = 'sc-note';
+      note.textContent = st.note;
+      body.appendChild(note);
+
       const runBtn = document.createElement('button');
-      runBtn.className = 'btn';
-      runBtn.style.marginTop = '6px';
-      runBtn.style.fontSize = '11px';
-      runBtn.style.padding = '5px 10px';
+      runBtn.className = 'btn primary sc-btn';
+      runBtn.textContent = isDone ? s.try.rerun : s.try.run;
+      runBtn.onclick = (e) => { e.stopPropagation(); runLassoStage(); };
+      body.appendChild(runBtn);
+    } else if(st.button === 'run'){
+      const runBtn = document.createElement('button');
+      runBtn.className = 'btn primary sc-btn';
       runBtn.textContent = isDone ? s.try.rerun : s.try.run;
       runBtn.onclick = (e) => { e.stopPropagation(); curStage = i; renderTry(); };
       body.appendChild(runBtn);
@@ -620,6 +713,21 @@ function renderTry(){
   stageImg.src = path;
   stageImg.style.display = 'block';
   glyphEl.style.display = 'none';
+
+  const lassoSvg = document.getElementById('lasso-svg');
+  if(curStage === 1){
+    stageImg.style.clipPath = lassoApplied ? stageImg.style.clipPath : '';
+    if(lassoApplied && lassoPoints.length >= 3){
+      const clip = 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
+      stageImg.style.clipPath = clip;
+    }
+    drawLassoPreview();
+  } else {
+    stageImg.style.clipPath = '';
+    lassoSvg.innerHTML = '';
+    lassoSvg.classList.remove('drawing');
+  }
+
   stageImg.onerror = () => {
     if(stageImg.src.indexOf(TEMP_IMAGE) === -1){
       stageImg.src = TEMP_IMAGE;
