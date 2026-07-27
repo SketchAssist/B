@@ -109,6 +109,18 @@
 
   .viewer{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:var(--bg); overflow:hidden; min-height:260px; }
   .viewer .stage-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); }
+  .viewer .handfix-canvas{ position:absolute; inset:0; width:100%; height:100%; z-index:2; display:none; }
+  .viewer .handfix-canvas.on{ display:block; }
+  .handfix-toolbar{ display:none; align-items:center; gap:8px; padding:10px 20px 0; flex-wrap:wrap; }
+  .handfix-toolbar.show{ display:flex; }
+  .hf-label{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; }
+  .hf-bg-buttons{ display:flex; gap:4px; flex-wrap:wrap; }
+  .hf-btn{ font-family:var(--sans); font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; }
+  .hf-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+  .hf-sep{ width:1px; height:16px; background:var(--line); margin:0 4px; }
+  .work-left-tools .t.tool-active{ color:var(--accent-deep); }
+  .work-left-tools .t.tool-active span{ color:var(--accent-deep); }
+  .work-left-tools .t{ cursor:pointer; }
   .viewer .lasso-svg{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
   .viewer .lasso-svg.drawing{ pointer-events:auto; cursor:crosshair; }
   .lasso-path{ fill:rgba(91,175,152,0.25); stroke:var(--accent); stroke-width:0.4; stroke-dasharray:1.2 0.8; }
@@ -252,8 +264,8 @@
         </div>
         <div class="work-left-tools">
           <div class="t">▲<span>SEL</span></div>
-          <div class="t">✎<span>PEN</span></div>
-          <div class="t">⌫<span>ERS</span></div>
+          <div class="t" id="tool-pen">✎<span>PEN</span></div>
+          <div class="t" id="tool-eraser">⌫<span>ERS</span></div>
           <div class="t">T<span>TXT</span></div>
           <div class="t">⤢<span>SCL</span></div>
         </div>
@@ -261,8 +273,16 @@
         <div class="work-main">
           <div class="stage-tabstrip" id="stage-tabstrip"></div>
 
+          <div class="handfix-toolbar" id="handfix-toolbar">
+            <span class="hf-label" id="hf-label-bg"></span>
+            <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
+            <span class="hf-sep"></span>
+            <button class="hf-btn" id="hf-canvas-toggle"></button>
+          </div>
+
           <div class="viewer" id="stage-display">
             <img class="stage-img" id="stage-img" alt="">
+            <canvas class="handfix-canvas" id="handfix-canvas"></canvas>
             <svg class="lasso-svg" id="lasso-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
             <div class="glyph-big" id="stage-glyph"></div>
             <div class="badge" id="stage-badge"></div>
@@ -346,6 +366,10 @@ const STR = {
         { name:'考古遺物モード' }
       ],
       mode_soon_name:'汎用モード（試作中・近日公開）',
+      hf_bg_label:'背景',
+      hf_bg_none:'背景なし',
+      hf_canvas_on:'キャンバスなし',
+      hf_canvas_off:'キャンバスあり',
       stages:[
         { name:'元の写真', desc:'アップロード済みの原本画像', button:'none' },
         { name:'投げ縄選択', desc:'対象物を投げ縄で囲んで選択範囲を指定する（Stage 1）', button:'lasso', secondary:'対象を囲む', note:'※ 投げ縄で対象を囲んでから「実行」してください' },
@@ -405,6 +429,10 @@ const STR = {
         { name:'Artifact mode' }
       ],
       mode_soon_name:'General mode (in development)',
+      hf_bg_label:'Background',
+      hf_bg_none:'No background',
+      hf_canvas_on:'Hide canvas',
+      hf_canvas_off:'Show canvas',
       stages:[
         { name:'Original photo', desc:'The uploaded source image', button:'none' },
         { name:'Lasso selection', desc:'Lasso the subject to mark the selection area (Stage 1)', button:'lasso', secondary:'Draw lasso', note:'※ Draw a lasso around the subject, then press "Run".' },
@@ -474,6 +502,11 @@ let lang = 'ja';
 let lassoPoints = [];      // 描いた投げ縄の頂点（%座標）
 let lassoIsDrawing = false;
 let lassoApplied = false;  // 「実行」で範囲確定済みか
+let handfixBg = 0;         // 手書き修正の背景：0=元の写真,1=投げ縄選択,2=特徴線強調,3=エッジ抽出,-1=背景なし
+let handfixCanvasOn = true;
+let handfixTool = 'pen';   // 'pen' | 'eraser'
+let handfixDrawing = false;
+let handfixCanvasReady = false;
 let curMode = 0, curStage = 0, curOs = 0, curTopic = 'intro';
 
 function t(){ return STR[lang]; }
@@ -538,10 +571,16 @@ function resetLasso(){
   lassoPoints = [];
   lassoIsDrawing = false;
   lassoApplied = false;
+  handfixCanvasReady = false;
+  handfixBg = 0;
+  handfixCanvasOn = true;
   const svg = document.getElementById('lasso-svg');
   svg.innerHTML = '';
   svg.classList.remove('drawing');
   document.getElementById('stage-img').style.clipPath = '';
+  const canvas = document.getElementById('handfix-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 function pointToPct(evt, svg){
   const rect = svg.getBoundingClientRect();
@@ -599,6 +638,93 @@ function runLassoStage(){
   }
   renderTry();
 }
+
+/* ---------- 手書き修正：背景レイヤー選択 ---------- */
+function renderHandfixBgButtons(){
+  const s = t();
+  const el = document.getElementById('hf-bg-buttons');
+  document.getElementById('hf-label-bg').textContent = s.try.hf_bg_label;
+  el.innerHTML = '';
+  s.try.stages.slice(0, TOPTAB_STAGE_COUNT).forEach((st, i) => {
+    if(i === 4) return;
+    const b = document.createElement('button');
+    b.className = 'hf-btn' + (handfixBg === i ? ' active' : '');
+    b.textContent = st.name;
+    b.onclick = () => { handfixBg = i; renderTry(); };
+    el.appendChild(b);
+  });
+  const noneBtn = document.createElement('button');
+  noneBtn.className = 'hf-btn' + (handfixBg === -1 ? ' active' : '');
+  noneBtn.textContent = s.try.hf_bg_none;
+  noneBtn.onclick = () => { handfixBg = -1; renderTry(); };
+  el.appendChild(noneBtn);
+}
+document.getElementById('hf-canvas-toggle').addEventListener('click', () => {
+  handfixCanvasOn = !handfixCanvasOn;
+  renderTry();
+});
+
+/* ---------- 手書き修正：キャンバスに描画（背景をなぞって作業できる） ---------- */
+function setHandfixTool(toolName){
+  handfixTool = toolName;
+  document.getElementById('tool-pen').classList.toggle('tool-active', toolName === 'pen');
+  document.getElementById('tool-eraser').classList.toggle('tool-active', toolName === 'eraser');
+}
+document.getElementById('tool-pen').addEventListener('click', () => setHandfixTool('pen'));
+document.getElementById('tool-eraser').addEventListener('click', () => setHandfixTool('eraser'));
+setHandfixTool('pen');
+
+(function setupHandfixCanvas(){
+  const canvas = document.getElementById('handfix-canvas');
+  const ctx = canvas.getContext('2d');
+  let lastX = 0, lastY = 0;
+
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    if(rect.width === 0 || rect.height === 0) return;
+    const img = ctx.getImageData ? null : null;
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function posFromEvent(e){
+    const rect = canvas.getBoundingClientRect();
+    return [e.clientX - rect.left, e.clientY - rect.top];
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if(curStage !== 4 || !handfixCanvasOn) return;
+    if(canvas.width === 0){ resizeCanvas(); }
+    handfixDrawing = true;
+    [lastX, lastY] = posFromEvent(e);
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if(!handfixDrawing) return;
+    const [x, y] = posFromEvent(e);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if(handfixTool === 'eraser'){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 16;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = '#111';
+      ctx.lineWidth = 3;
+    }
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [lastX, lastY] = [x, y];
+  });
+  canvas.addEventListener('pointerup', () => { handfixDrawing = false; });
+  canvas.addEventListener('pointerleave', () => { handfixDrawing = false; });
+
+  // 手書き修正タブに入るたびキャンバスサイズを合わせておく
+  window._resizeHandfixCanvas = resizeCanvas;
+})();
 
 function renderModeGrid(){
   const el = document.getElementById('mode-grid');
@@ -710,36 +836,73 @@ function renderTry(){
 
   const stageImg = document.getElementById('stage-img');
   const glyphEl = document.getElementById('stage-glyph');
-  const path = imagePath(curMode, curStage);
-  stageImg.src = path;
-  stageImg.style.display = 'block';
-  glyphEl.style.display = 'none';
-
+  const canvas = document.getElementById('handfix-canvas');
   const lassoSvg = document.getElementById('lasso-svg');
-  if(curStage === 1){
-    stageImg.style.clipPath = lassoApplied ? stageImg.style.clipPath : '';
+  const hfToolbar = document.getElementById('handfix-toolbar');
+
+  function clipFor(){
     if(lassoApplied && lassoPoints.length >= 3){
-      const clip = 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
-      stageImg.style.clipPath = clip;
+      return 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
     }
-    drawLassoPreview();
-  } else {
-    stageImg.style.clipPath = '';
-    lassoSvg.innerHTML = '';
-    lassoSvg.classList.remove('drawing');
+    return '';
   }
 
-  stageImg.onerror = () => {
-    if(stageImg.src.indexOf(TEMP_IMAGE) === -1){
-      stageImg.src = TEMP_IMAGE;
-      return;
+  if(curStage === 4){
+    // 手書き修正：背景レイヤー + キャンバスレイヤー
+    hfToolbar.classList.add('show');
+    lassoSvg.innerHTML = '';
+    lassoSvg.classList.remove('drawing');
+    renderHandfixBgButtons();
+
+    if(handfixBg === -1){
+      stageImg.style.display = 'none';
+    } else {
+      const bgPath = imagePath(curMode, handfixBg);
+      stageImg.src = bgPath;
+      stageImg.style.display = 'block';
+      stageImg.style.clipPath = handfixBg >= 1 ? clipFor() : '';
+      stageImg.onerror = () => {
+        if(stageImg.src.indexOf(TEMP_IMAGE) === -1){ stageImg.src = TEMP_IMAGE; }
+      };
     }
-    stageImg.style.display = 'none';
-    glyphEl.style.display = 'flex';
-    glyphEl.style.alignItems = 'center';
-    glyphEl.style.justifyContent = 'center';
-    glyphEl.textContent = SAMPLE_GLYPH;
-  };
+    canvas.classList.toggle('on', handfixCanvasOn);
+    if(handfixCanvasOn && !handfixCanvasReady && window._resizeHandfixCanvas){
+      window._resizeHandfixCanvas();
+      handfixCanvasReady = true;
+    }
+    document.getElementById('hf-canvas-toggle').textContent = handfixCanvasOn ? s.try.hf_canvas_on : s.try.hf_canvas_off;
+    document.getElementById('hf-canvas-toggle').classList.toggle('active', !handfixCanvasOn);
+    glyphEl.style.display = 'none';
+  } else {
+    hfToolbar.classList.remove('show');
+    canvas.classList.remove('on');
+    const path = imagePath(curMode, curStage);
+    stageImg.src = path;
+    stageImg.style.display = 'block';
+    glyphEl.style.display = 'none';
+
+    if(curStage >= 1){
+      stageImg.style.clipPath = clipFor();
+      if(curStage === 1){ drawLassoPreview(); }
+      else { lassoSvg.innerHTML = ''; lassoSvg.classList.remove('drawing'); }
+    } else {
+      stageImg.style.clipPath = '';
+      lassoSvg.innerHTML = '';
+      lassoSvg.classList.remove('drawing');
+    }
+
+    stageImg.onerror = () => {
+      if(stageImg.src.indexOf(TEMP_IMAGE) === -1){
+        stageImg.src = TEMP_IMAGE;
+        return;
+      }
+      stageImg.style.display = 'none';
+      glyphEl.style.display = 'flex';
+      glyphEl.style.alignItems = 'center';
+      glyphEl.style.justifyContent = 'center';
+      glyphEl.textContent = SAMPLE_GLYPH;
+    };
+  }
 
   const isLast = curStage === s.try.stages.length - 1;
   document.getElementById('own-photo-banner').classList.toggle('show', isLast);
