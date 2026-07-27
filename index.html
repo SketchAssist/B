@@ -309,7 +309,6 @@
 
 </div>
 
-<script src="images-data.js"></script>
 <script>
 /* =========================================================
    STR — 全UI文字列（コードから分離、ja / en 切替）
@@ -345,8 +344,6 @@ const STR = {
         { name:'投げ縄選択', desc:'対象物を投げ縄で囲んで選択範囲を指定する' },
         { name:'特徴線強調', desc:'陰影・テクスチャを除去し特徴線を強調する' },
         { name:'エッジ抽出', desc:'特徴線強調画像から構造エッジを抽出する' },
-        { name:'線の整理', desc:'スケルトン化とグラフ解析により線を整理する' },
-        { name:'閉領域抽出+SVG出力', desc:'閉領域を抽出し、学術図用のSVGを生成する' },
         { name:'手書き修正', desc:'部位マップを参照しながらペン・消しゴムで手書き修正する' }
       ]
     },
@@ -362,9 +359,7 @@ const STR = {
         { id:'stage1', label:'投げ縄選択の意味', indent:true },
         { id:'stage2', label:'特徴線強調の意味', indent:true },
         { id:'stage3', label:'エッジ抽出の意味', indent:true },
-        { id:'stage4', label:'線の整理の意味', indent:true },
-        { id:'stage5', label:'閉領域抽出+SVG出力の意味', indent:true },
-        { id:'stage6', label:'手書き修正の意味', indent:true },
+        { id:'stage4', label:'手書き修正の意味', indent:true },
         { id:'use_cases', label:'Use cases（対象研究）' },
         { id:'using_a', label:'Using SketchAssist' },
         { id:'faq', label:'FAQ' }
@@ -408,8 +403,6 @@ const STR = {
         { name:'Lasso selection', desc:'Lasso the subject to mark the selection area' },
         { name:'Feature line enhancement', desc:'Remove shading/texture and enhance feature lines' },
         { name:'Edge extraction', desc:'Extract structural edges from the enhanced image' },
-        { name:'Line cleanup', desc:'Clean up lines via skeletonization and graph analysis' },
-        { name:'Closed-region + SVG output', desc:'Extract closed regions and generate an SVG for academic diagrams' },
         { name:'Hand-drawn correction', desc:'Manually correct with pen/eraser, referencing the part map' }
       ]
     },
@@ -425,9 +418,7 @@ const STR = {
         { id:'stage1', label:'Meaning of Lasso selection', indent:true },
         { id:'stage2', label:'Meaning of Feature line enhancement', indent:true },
         { id:'stage3', label:'Meaning of Edge extraction', indent:true },
-        { id:'stage4', label:'Meaning of Line cleanup', indent:true },
-        { id:'stage5', label:'Meaning of Closed-region + SVG output', indent:true },
-        { id:'stage6', label:'Meaning of Hand-drawn correction', indent:true },
+        { id:'stage4', label:'Meaning of Hand-drawn correction', indent:true },
         { id:'use_cases', label:'Use cases' },
         { id:'using_a', label:'Using SketchAssist' },
         { id:'faq', label:'FAQ' }
@@ -448,8 +439,8 @@ const STR = {
    assets/samples/{mode}/{sample}/{stage}.jpg に画像を置くと自動反映。
    ========================================================= */
 const MODE_KEYS = ['insect','plant','fossil','artifact'];
-const STAGE_KEYS = ['original','lasso','feature','edge','line','svg','handfix'];
-const TOPTAB_STAGE_COUNT = 5; // 元写真 + 投げ縄選択〜線の整理 はタブ、残り2つはカードの実行で進む
+const STAGE_KEYS = ['original','lasso','feature','edge','handfix'];
+const TOPTAB_STAGE_COUNT = 4; // 元写真〜エッジ抽出はタブ、手書き修正はカードの実行で進む
 const SAMPLE_GLYPH = '●';
 const OS_LIST = [
   { key:'Windows', ext:'exe' },
@@ -463,11 +454,10 @@ function imagePath(modeIdx, stageIdx){
 
 /* 仮の暫定画像：本物の写真が各パスに用意されるまで、
    すべてのモード・ステージでこの1枚を代わりに表示する。
-   このプレビュー環境は外部の assets/ ファイルを読み込めないことがあるため、
-   仮画像はHTMLに直接埋め込み、何もしなくても必ず表示されるようにしている。
-   本物の画像を assets/samples/{mode}/sample1/{stage}.jpg に置けば、
-   そちらが自動的に優先される（ローカルでファイルを開いた場合）。 */
-const TEMP_IMAGE = (typeof IMAGE_DATA !== 'undefined' && IMAGE_DATA['insect/sample1/original']) || '';
+   画像は images-data.js のような専用ファイルではなく、
+   assets/samples/ 配下に置いた実ファイルをそのまま参照する。
+   該当パスに本物の画像が置かれれば、そちらが自動的に優先される。 */
+const TEMP_IMAGE = 'assets/samples/insect/sample1/original.jpg';
 
 
 let lang = 'ja';
