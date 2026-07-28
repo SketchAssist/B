@@ -109,17 +109,19 @@
 
   .viewer{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:var(--bg); overflow:hidden; min-height:260px; }
   .viewer .stage-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); }
-  .viewer .handfix-canvas{ position:absolute; inset:0; width:100%; height:100%; z-index:2; display:none; }
+  .viewer .handfix-canvas{ position:absolute; inset:0; width:100%; height:100%; z-index:2; display:none; touch-action:none; }
   .viewer .handfix-canvas.on{ display:block; }
   .viewer .scale-preview{ z-index:3; pointer-events:none; }
   .text-layer{ position:absolute; inset:0; z-index:4; display:none; pointer-events:none; }
   .text-layer.on{ display:block; }
   .text-layer.placing{ pointer-events:auto; cursor:text; }
   .text-box{ position:absolute; pointer-events:auto; min-width:70px; background:rgba(255,255,255,0.85); border:1px dashed var(--accent); border-radius:4px; }
+  .text-box.selected{ border-style:solid; box-shadow:0 0 0 2px var(--accent-soft); }
   html[data-theme="dark"] .text-box{ background:rgba(24,36,32,0.85); }
   .tb-handle{ position:absolute; top:-16px; left:-1px; width:16px; height:14px; background:var(--accent); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; cursor:move; border-radius:3px 3px 0 0; }
   .tb-text{ padding:4px 6px 4px 6px; font-size:13px; color:var(--ink); min-width:60px; outline:none; }
-  .handfix-toolbar{ display:none; align-items:center; gap:8px; padding:10px 20px 0; flex-wrap:wrap; }
+  .handfix-toolbar{ display:none; position:absolute; top:0; left:0; right:0; align-items:center; gap:8px; padding:8px 12px; flex-wrap:wrap; background:rgba(0,0,0,0.06); backdrop-filter:blur(2px); z-index:5; }
+  html[data-theme="dark"] .handfix-toolbar{ background:rgba(0,0,0,0.35); }
   .handfix-toolbar.show{ display:flex; }
   .hf-label{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; }
   .hf-bg-buttons{ display:flex; gap:4px; flex-wrap:wrap; }
@@ -299,13 +301,6 @@
         <div class="work-main">
           <div class="stage-tabstrip" id="stage-tabstrip"></div>
 
-          <div class="handfix-toolbar" id="handfix-toolbar">
-            <span class="hf-label" id="hf-label-bg"></span>
-            <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
-            <span class="hf-sep"></span>
-            <button class="hf-btn" id="hf-canvas-toggle"></button>
-          </div>
-
           <div class="viewer" id="stage-display">
             <img class="stage-img" id="stage-img" alt="">
             <canvas class="handfix-canvas" id="handfix-canvas"></canvas>
@@ -315,6 +310,12 @@
             <div class="glyph-big" id="stage-glyph"></div>
             <div class="badge" id="stage-badge"></div>
             <div class="label" id="stage-label"></div>
+            <div class="handfix-toolbar" id="handfix-toolbar">
+              <span class="hf-label" id="hf-label-bg"></span>
+              <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
+              <span class="hf-sep"></span>
+              <button class="hf-btn" id="hf-canvas-toggle"></button>
+            </div>
           </div>
 
           <div class="work-nav">
@@ -747,6 +748,13 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
 (function setupTextLayer(){
   const layer = document.getElementById('text-layer');
   let dragBox = null, dragOffsetX = 0, dragOffsetY = 0;
+  let selectedBox = null;
+
+  function selectBox(box){
+    if(selectedBox) selectedBox.classList.remove('selected');
+    selectedBox = box;
+    if(selectedBox) selectedBox.classList.add('selected');
+  }
 
   function createTextBox(x, y){
     const box = document.createElement('div');
@@ -766,21 +774,30 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
 
     layer.appendChild(box);
     textEl.focus();
+    selectBox(box);
 
     handle.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
+      selectBox(box);
       dragBox = box;
       const boxRect = box.getBoundingClientRect();
       dragOffsetX = e.clientX - boxRect.left;
       dragOffsetY = e.clientY - boxRect.top;
       handle.setPointerCapture(e.pointerId);
     });
+    textEl.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      selectBox(box);
+    });
   }
 
   layer.addEventListener('pointerdown', (e) => {
-    if(e.target === layer && handfixTool === 'text'){
-      const rect = layer.getBoundingClientRect();
-      createTextBox(e.clientX - rect.left, e.clientY - rect.top);
+    if(e.target === layer){
+      selectBox(null);
+      if(handfixTool === 'text'){
+        const rect = layer.getBoundingClientRect();
+        createTextBox(e.clientX - rect.left, e.clientY - rect.top);
+      }
     }
   });
   layer.addEventListener('pointermove', (e) => {
@@ -791,7 +808,17 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
   });
   window.addEventListener('pointerup', () => { dragBox = null; });
 
-  window._clearTextBoxes = () => { layer.innerHTML = ''; };
+  window.addEventListener('keydown', (e) => {
+    if(e.key !== 'Backspace' && e.key !== 'Delete') return;
+    if(!selectedBox) return;
+    const textEl = selectedBox.querySelector('.tb-text');
+    if(document.activeElement === textEl) return; // 文字編集中は通常のBackspaceとして扱う
+    e.preventDefault();
+    selectedBox.remove();
+    selectedBox = null;
+  });
+
+  window._clearTextBoxes = () => { layer.innerHTML = ''; selectedBox = null; };
 })();
 
 
@@ -895,13 +922,16 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     targetCtx.restore();
   }
 
+  let scaleDragging = false;
+
   canvas.addEventListener('pointerdown', (e) => {
     if(curStage !== 4 || !handfixCanvasOn) return;
     syncCanvasSize();
     if(handfixTool === 'scale'){
       scaleStart = posFromEvent(e);
-      handfixDrawing = true;
+      scaleDragging = true;
       canvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
       return;
     }
     pushUndoSnapshot();
@@ -910,13 +940,13 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', (e) => {
-    if(!handfixDrawing) return;
-    if(handfixTool === 'scale'){
+    if(scaleDragging && scaleStart){
       const cur = posFromEvent(e);
       pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       drawScaleLine(pctx, scaleStart, cur, true);
       return;
     }
+    if(!handfixDrawing) return;
     const [x, y] = posFromEvent(e);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -934,21 +964,26 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     ctx.stroke();
     [lastX, lastY] = [x, y];
   });
+  function finishScaleDrag(e){
+    if(!scaleDragging || !scaleStart) return;
+    const end = posFromEvent(e);
+    pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    pushUndoSnapshot();
+    ctx.globalCompositeOperation = 'source-over';
+    drawScaleLine(ctx, scaleStart, end, false);
+    scaleStart = null;
+    scaleDragging = false;
+  }
   canvas.addEventListener('pointerup', (e) => {
-    if(handfixTool === 'scale' && handfixDrawing && scaleStart){
-      const end = posFromEvent(e);
-      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-      pushUndoSnapshot();
-      ctx.globalCompositeOperation = 'source-over';
-      drawScaleLine(ctx, scaleStart, end, false);
-      scaleStart = null;
-    }
+    finishScaleDrag(e);
     handfixDrawing = false;
   });
-  canvas.addEventListener('pointerleave', () => {
-    if(handfixTool === 'scale'){ pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height); }
+  canvas.addEventListener('pointercancel', (e) => {
+    finishScaleDrag(e);
     handfixDrawing = false;
   });
+  // 投げ縄描画と同様、キャプチャ中はpointerleaveで中断しない
+  // （スケール線のドラッグ中に一瞬カーソルが外れても線が消えないようにする）
 
   // 手書き修正タブに入るたびキャンバスサイズを合わせておく
   window._resizeHandfixCanvas = syncCanvasSize;
