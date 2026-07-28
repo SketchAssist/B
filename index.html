@@ -173,8 +173,8 @@
   .sc-btn-secondary{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
   .sc-note{ font-size:10.5px; color:var(--amber); margin-top:6px; line-height:1.4; }
 
-  .own-photo-banner{ margin:16px 20px; border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; background:var(--accent-soft); display:none; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-  .own-photo-banner.show{ display:flex; animation:fade 0.3s ease; }
+  .own-photo-banner{ margin:16px 20px; border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; background:var(--accent-soft); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; visibility:hidden; pointer-events:none; }
+  .own-photo-banner.show{ visibility:visible; pointer-events:auto; animation:fade 0.3s ease; }
   .own-photo-banner .txt h4{ font-family:var(--serif); font-size:15px; font-weight:600; margin-bottom:4px; color:var(--accent-deep); }
   .own-photo-banner .txt p{ font-size:12.5px; color:var(--ink-soft); }
 
@@ -893,9 +893,8 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
   function currentUnit(){
     return document.getElementById('scale-unit-select').value;
   }
-  function drawScaleLine(targetCtx, p1, p2, live){
+  function drawScaleLine(targetCtx, p1, p2, live, labelValue){
     const dx = p2[0]-p1[0], dy = p2[1]-p1[1];
-    const dist = Math.round(Math.sqrt(dx*dx + dy*dy));
     targetCtx.save();
     targetCtx.lineCap = 'round';
     targetCtx.strokeStyle = live ? 'rgba(43,110,95,0.85)' : '#111';
@@ -915,10 +914,13 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
       targetCtx.stroke();
     });
     targetCtx.setLineDash([]);
-    targetCtx.font = '12px sans-serif';
-    targetCtx.fillStyle = live ? 'rgba(43,110,95,0.9)' : '#111';
-    const midX = (p1[0]+p2[0])/2, midY = (p1[1]+p2[1])/2;
-    targetCtx.fillText(dist + ' ' + currentUnit(), midX + 6, midY - 6);
+    // ラベルは自動計算のピクセル距離ではなく、確定時に手動入力された数値のみを表示する
+    if(!live && labelValue){
+      targetCtx.font = '12px sans-serif';
+      targetCtx.fillStyle = '#111';
+      const midX = (p1[0]+p2[0])/2, midY = (p1[1]+p2[1])/2;
+      targetCtx.fillText(labelValue + ' ' + currentUnit(), midX + 6, midY - 6);
+    }
     targetCtx.restore();
   }
 
@@ -968,11 +970,22 @@ document.getElementById('scale-unit-select').addEventListener('click', (e) => e.
     if(!scaleDragging || !scaleStart) return;
     const end = posFromEvent(e);
     pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    scaleDragging = false;
+    const startPt = scaleStart;
+    scaleStart = null;
+    const dx = end[0]-startPt[0], dy = end[1]-startPt[1];
+    if(Math.sqrt(dx*dx + dy*dy) < 4) return; // ほぼ動いていない場合は無視
+
+    const unit = currentUnit();
+    const promptText = lang === 'ja'
+      ? ('目盛りの数値を入力してください（単位: ' + unit + '）')
+      : ('Enter the scale value (unit: ' + unit + ')');
+    const input = window.prompt(promptText, '');
+    if(input === null || input.trim() === '') return; // キャンセル・未入力時は描画しない
+
     pushUndoSnapshot();
     ctx.globalCompositeOperation = 'source-over';
-    drawScaleLine(ctx, scaleStart, end, false);
-    scaleStart = null;
-    scaleDragging = false;
+    drawScaleLine(ctx, startPt, end, false, input.trim());
   }
   canvas.addEventListener('pointerup', (e) => {
     finishScaleDrag(e);
