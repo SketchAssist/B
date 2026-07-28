@@ -120,9 +120,8 @@
   html[data-theme="dark"] .text-box{ background:rgba(24,36,32,0.85); }
   .tb-handle{ position:absolute; top:-16px; left:-1px; width:16px; height:14px; background:var(--accent); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; cursor:move; border-radius:3px 3px 0 0; }
   .tb-text{ padding:4px 6px 4px 6px; font-size:13px; color:var(--ink); min-width:60px; outline:none; }
-  .handfix-toolbar{ display:none; position:absolute; top:0; left:0; right:0; align-items:center; gap:8px; padding:8px 12px; flex-wrap:wrap; background:rgba(0,0,0,0.06); backdrop-filter:blur(2px); z-index:5; }
-  html[data-theme="dark"] .handfix-toolbar{ background:rgba(0,0,0,0.35); }
-  .handfix-toolbar.show{ display:flex; }
+  .handfix-toolbar{ display:flex; align-items:center; gap:8px; padding:8px 20px; flex-wrap:wrap; background:var(--surface); border-bottom:1px solid var(--line); flex-shrink:0; visibility:hidden; }
+  .handfix-toolbar.show{ visibility:visible; }
   .hf-label{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; }
   .hf-bg-buttons{ display:flex; gap:4px; flex-wrap:wrap; }
   .hf-btn{ font-family:var(--sans); font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; }
@@ -301,6 +300,13 @@
         <div class="work-main">
           <div class="stage-tabstrip" id="stage-tabstrip"></div>
 
+          <div class="handfix-toolbar" id="handfix-toolbar">
+            <span class="hf-label" id="hf-label-bg"></span>
+            <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
+            <span class="hf-sep"></span>
+            <button class="hf-btn" id="hf-canvas-toggle"></button>
+          </div>
+
           <div class="viewer" id="stage-display">
             <img class="stage-img" id="stage-img" alt="">
             <canvas class="handfix-canvas" id="handfix-canvas"></canvas>
@@ -310,12 +316,6 @@
             <div class="glyph-big" id="stage-glyph"></div>
             <div class="badge" id="stage-badge"></div>
             <div class="label" id="stage-label"></div>
-            <div class="handfix-toolbar" id="handfix-toolbar">
-              <span class="hf-label" id="hf-label-bg"></span>
-              <div class="hf-bg-buttons" id="hf-bg-buttons"></div>
-              <span class="hf-sep"></span>
-              <button class="hf-btn" id="hf-canvas-toggle"></button>
-            </div>
           </div>
 
           <div class="work-nav">
@@ -1104,6 +1104,12 @@ function renderTry(){
   const lassoSvg = document.getElementById('lasso-svg');
   const hfToolbar = document.getElementById('handfix-toolbar');
 
+  // ツールバーの中身は常に描画しておく（visibilityで隠すだけなので、
+  // 中身が空だと高さが変わってしまい、viewerのサイズが段によってずれる）
+  renderHandfixBgButtons();
+  document.getElementById('hf-canvas-toggle').textContent = handfixCanvasOn ? s.try.hf_canvas_on : s.try.hf_canvas_off;
+  document.getElementById('hf-canvas-toggle').classList.toggle('active', !handfixCanvasOn);
+
   function clipFor(){
     if(lassoApplied && lassoPoints.length >= 3){
       return 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
@@ -1117,7 +1123,6 @@ function renderTry(){
     document.getElementById('undo-redo-group').classList.add('show');
     lassoSvg.innerHTML = '';
     lassoSvg.classList.remove('drawing');
-    renderHandfixBgButtons();
 
     if(handfixBg === -1){
       stageImg.style.display = 'none';
@@ -1136,8 +1141,6 @@ function renderTry(){
     if(handfixCanvasOn && window._resizeHandfixCanvas){
       window._resizeHandfixCanvas();
     }
-    document.getElementById('hf-canvas-toggle').textContent = handfixCanvasOn ? s.try.hf_canvas_on : s.try.hf_canvas_off;
-    document.getElementById('hf-canvas-toggle').classList.toggle('active', !handfixCanvasOn);
     glyphEl.style.display = 'none';
   } else {
     hfToolbar.classList.remove('show');
