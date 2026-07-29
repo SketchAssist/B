@@ -162,7 +162,9 @@ const TEMP_IMAGE = 'insect-original.jpg';
 
 
 let lang = 'ja';
-let lassoPoints = [];      // 描いた投げ縄の頂点（%座標）
+let lassoPoints = [];      // 描いている最中の投げ縄の頂点（現在のボックスに対する%座標。プレビュー表示専用）
+let lassoImageFrac = [];   // 「実行」で確定した投げ縄範囲。画像コンテンツ内の相対位置（0〜1）で保持し、
+                            // 画面のサイズや余白（レターボックス）が変わっても常に画像の同じ部分を指すようにする
 let lassoIsDrawing = false;
 let lassoApplied = false;  // 「実行」で範囲確定済みか
 let handfixBg = 0;         // 手書き修正の背景：0=元の写真,1=投げ縄選択,2=特徴線強調,3=エッジ抽出,-1=背景なし
