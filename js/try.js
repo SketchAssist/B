@@ -1,7 +1,42 @@
 /* ---------- TRY ---------- */
 /* ---------- 投げ縄選択（実際にドラッグして範囲を描ける） ---------- */
+/* ---------- 画像の「実際に表示されているコンテンツ範囲」を計算する ----------
+   <img>はobject-fit:containでボックス全体(inset:0)に配置されるが、
+   ボックスと画像の縦横比が違うと上下または左右に余白（レターボックス）ができる。
+   投げ縄範囲はこの余白を除いた「画像そのもの」に対する相対位置で保持し、
+   ボックスのサイズや形が画面ごとに変わっても常に同じ場所を指すようにする。 */
+function getImageContentRect(imgEl){
+  const bw = imgEl.clientWidth, bh = imgEl.clientHeight;
+  const nw = imgEl.naturalWidth, nh = imgEl.naturalHeight;
+  if(!bw || !bh || !nw || !nh){ return { x:0, y:0, w:100, h:100 }; } // 情報が無い場合はボックス全体を代用
+  const boxRatio = bw / bh, imgRatio = nw / nh;
+  let w, h, x, y;
+  if(imgRatio > boxRatio){
+    w = 100;
+    h = (bw / imgRatio) / bh * 100;
+    x = 0;
+    y = (100 - h) / 2;
+  } else {
+    h = 100;
+    w = (bh * imgRatio) / bw * 100;
+    y = 0;
+    x = (100 - w) / 2;
+  }
+  return { x, y, w, h };
+}
+function boxPctToImageFrac(pt, contentRect){
+  const fx = contentRect.w > 0 ? (pt[0] - contentRect.x) / contentRect.w : 0.5;
+  const fy = contentRect.h > 0 ? (pt[1] - contentRect.y) / contentRect.h : 0.5;
+  return [Math.max(0, Math.min(1, fx)), Math.max(0, Math.min(1, fy))];
+}
+function imageFracToClipPolygon(fracPoints, imgEl){
+  const cr = getImageContentRect(imgEl);
+  return 'polygon(' + fracPoints.map(p => (cr.x + p[0]*cr.w) + '% ' + (cr.y + p[1]*cr.h) + '%').join(',') + ')';
+}
+
 function resetLasso(){
   lassoPoints = [];
+  lassoImageFrac = [];
   lassoIsDrawing = false;
   lassoApplied = false;
   handfixBg = 0;
@@ -33,8 +68,17 @@ function pointToPct(evt, svg){
 function drawLassoPreview(){
   const svg = document.getElementById('lasso-svg');
   svg.innerHTML = '';
-  if(lassoPoints.length < 2) return;
-  const pts = lassoPoints.map(p => p.join(',')).join(' ');
+  let points;
+  if(lassoIsDrawing || !lassoApplied){
+    points = lassoPoints; // 描画中はその場のボックス%座標をそのまま使う
+  } else {
+    // 確定済みの範囲は、画像内相対分数から現在のボックスに合わせて再計算する
+    const stageImg = document.getElementById('stage-img');
+    const cr = getImageContentRect(stageImg);
+    points = lassoImageFrac.map(p => [cr.x + p[0]*cr.w, cr.y + p[1]*cr.h]);
+  }
+  if(points.length < 2) return;
+  const pts = points.map(p => p.join(',')).join(' ');
   const el = document.createElementNS('http://www.w3.org/2000/svg', lassoIsDrawing ? 'polyline' : 'polygon');
   el.setAttribute('points', pts);
   el.setAttribute('class', 'lasso-path');
@@ -42,6 +86,7 @@ function drawLassoPreview(){
 }
 function startLassoDrawing(){
   lassoPoints = [];
+  lassoImageFrac = [];
   lassoIsDrawing = false;
   lassoApplied = false;
   document.getElementById('stage-img').style.clipPath = '';
@@ -73,8 +118,10 @@ function startLassoDrawing(){
 function runLassoStage(){
   curStage = 1;
   if(lassoPoints.length >= 3){
-    const clip = 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
-    document.getElementById('stage-img').style.clipPath = clip;
+    const stageImg = document.getElementById('stage-img');
+    const contentRect = getImageContentRect(stageImg);
+    lassoImageFrac = lassoPoints.map(p => boxPctToImageFrac(p, contentRect));
+    document.getElementById('stage-img').style.clipPath = imageFracToClipPolygon(lassoImageFrac, stageImg);
     lassoApplied = true;
     curStage = 2; // 特徴線強調はStage1と同時実行のため、自動的に進める
   }
@@ -529,11 +576,21 @@ function renderTry(){
   document.getElementById('hf-canvas-toggle').classList.toggle('active', !handfixCanvasOn);
 
   function clipFor(){
-    if(lassoApplied && lassoPoints.length >= 3){
-      return 'polygon(' + lassoPoints.map(p => p[0]+'% '+p[1]+'%').join(',') + ')';
+    if(lassoApplied && lassoImageFrac.length >= 3){
+      return imageFracToClipPolygon(lassoImageFrac, stageImg);
     }
     return '';
   }
+  // 画像の読み込みが完了した瞬間のnaturalWidth/Heightを使って再計算しないと、
+  // 読み込みタイミングによってはズレたクリップ範囲のまま固定されてしまうため、
+  // load完了時にも同じクリップを再適用する
+  stageImg.onload = () => {
+    if(curStage === 4){
+      if(handfixBg >= 1){ stageImg.style.clipPath = clipFor(); }
+    } else if(curStage >= 1){
+      stageImg.style.clipPath = clipFor();
+    }
+  };
 
   if(curStage === 4){
     // 手書き修正：背景レイヤー + キャンバスレイヤー
