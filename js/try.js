@@ -464,11 +464,6 @@ function renderModeGrid(){
     b.onclick = () => { curMode = i; curStage = 0; resetLasso(); renderTry(); };
     el.appendChild(b);
   });
-  const soon = document.createElement('button');
-  soon.className = 'mode-chip soon';
-  soon.textContent = t().try.mode_soon_name;
-  soon.disabled = true;
-  el.appendChild(soon);
 }
 
 function renderStageTabstrip(){
