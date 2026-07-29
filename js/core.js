@@ -24,9 +24,9 @@ const STR = {
         { name:'昆虫モード' },
         { name:'植物モード' },
         { name:'化石モード' },
-        { name:'考古遺物モード' }
+        { name:'考古遺物モード' },
+        { name:'汎用モード' }
       ],
-      mode_soon_name:'汎用モード（試作中・近日公開）',
       hf_bg_label:'背景',
       hf_bg_none:'背景なし',
       hf_canvas_on:'キャンバスなし',
@@ -88,9 +88,9 @@ const STR = {
         { name:'Insect mode' },
         { name:'Plant mode' },
         { name:'Fossil mode' },
-        { name:'Artifact mode' }
+        { name:'Artifact mode' },
+        { name:'General mode' }
       ],
-      mode_soon_name:'General mode (in development)',
       hf_bg_label:'Background',
       hf_bg_none:'No background',
       hf_canvas_on:'Hide canvas',
@@ -136,7 +136,7 @@ const STR = {
    画像/サンプルデータ（言語非依存）。
    assets/samples/{mode}/{sample}/{stage}.jpg に画像を置くと自動反映。
    ========================================================= */
-const MODE_KEYS = ['insect','plant','fossil','artifact'];
+const MODE_KEYS = ['insect','plant','fossil','artifact','general'];
 const STAGE_KEYS = ['original','lasso','feature','edge','handfix'];
 const TOPTAB_STAGE_COUNT = 5; // 元写真〜手書き修正まで、すべてタブで直接切替できる
 const SAMPLE_GLYPH = '●';
@@ -146,19 +146,22 @@ const OS_LIST = [
   { key:'Linux', ext:'AppImage' }
 ];
 
+const IMAGE_DIR = 'picture/'; // css/・js/と並ぶ画像フォルダ
+
 function imagePath(modeIdx, stageIdx){
   // 投げ縄選択（stage1）は、投げ縄で範囲を指定するまでは元の写真をそのまま表示する
   const key = stageIdx === 1 ? STAGE_KEYS[0] : STAGE_KEYS[stageIdx];
-  // ファイル名だけで区別するフラット構成（リポジトリ直下に置くだけでよい）
-  // 例: insect-original.jpg, insect-feature.jpg, plant-edge.jpg ...
-  return MODE_KEYS[modeIdx] + '-' + key + '.jpg';
+  // ファイル名だけで区別するフラット構成（pictureフォルダ直下に置くだけでよい）
+  // 例: picture/insect-original.jpg, picture/insect-feature.jpg, picture/plant-edge.jpg ...
+  return IMAGE_DIR + MODE_KEYS[modeIdx] + '-' + key + '.jpg';
 }
 
 /* 仮の暫定画像：本物の写真が各パスに用意されるまで、
    すべてのモード・ステージでこの1枚を代わりに表示する。
-   画像はリポジトリ直下に置いた実ファイルをそのまま参照する。
+   画像はpictureフォルダに置いた実ファイルをそのまま参照する。
    該当ファイルが本物の画像に差し替えられれば、そちらが自動的に優先される。 */
-const TEMP_IMAGE = 'insect-original.jpg';
+const TEMP_IMAGE = IMAGE_DIR + 'insect-original.jpg';
+
 
 
 let lang = 'ja';
