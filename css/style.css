@@ -176,6 +176,7 @@
   .toc-sub{ padding-left:30px; font-size:12.5px; font-family:var(--mono); }
   .learn-content{ padding:36px 40px; }
   .learn-content h2{ font-family:var(--serif); font-size:23px; font-weight:600; margin-bottom:14px; }
+  .learn-para{ font-size:14.5px; line-height:1.9; color:var(--ink-soft); margin-bottom:16px; max-width:640px; }
   .try-link{ display:inline-block; font-family:var(--mono); font-size:11px; color:var(--accent-deep); background:var(--accent-soft); padding:4px 10px; border-radius:12px; margin-bottom:16px; cursor:pointer; }
   .placeholder-line{ height:11px; background:var(--bg); border-radius:4px; margin-bottom:9px; }
   .detail-box{ margin-top:20px; border:1px dashed var(--line-strong); border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:12px; color:var(--ink-faint); cursor:pointer; }
