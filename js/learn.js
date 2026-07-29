@@ -28,20 +28,13 @@ function renderLearnContent(){
     link.onclick = () => goTo('try');
     el.appendChild(link);
   }
-  [90,75,60].forEach(w => {
-    const p = document.createElement('div');
-    p.className = 'placeholder-line';
-    p.style.width = w + '%';
+
+  const body = (LEARN_CONTENT[lang] && LEARN_CONTENT[lang][curTopic]) || '';
+  body.split(/\n\n+/).forEach(para => {
+    if(!para.trim()) return;
+    const p = document.createElement('p');
+    p.className = 'learn-para';
+    p.textContent = para.trim();
     el.appendChild(p);
   });
-  const box = document.createElement('div');
-  box.className = 'detail-box';
-  const closedText = lang === 'ja' ? '＋ 詳細説明を表示（仮）' : '+ Show details (placeholder)';
-  const openText = lang === 'ja' ? '－ 詳細説明（プレースホルダー本文）' : '− Details (placeholder body text)';
-  box.textContent = closedText;
-  box.onclick = () => {
-    box.classList.toggle('open');
-    box.textContent = box.classList.contains('open') ? openText : closedText;
-  };
-  el.appendChild(box);
 }
