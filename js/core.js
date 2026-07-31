@@ -60,10 +60,10 @@ const STR = {
       try_link:'Tryで見た内容を確認する →'
     },
     download: {
-      version:'Latest version — v0.1.0（仮）',
+      version:'Latest version — v1.0.0',
       dl:'Download',
       guide:'Installation guide',
-      note_dl:(os,name)=> os + ' 版のダミーファイル「' + name + '」をダウンロードしました（テスト用）'
+      note_dl:(os,name)=> os + '版「' + name + '」のダウンロードを開始しました'
     }
   },
   en: {
@@ -124,10 +124,10 @@ const STR = {
       try_link:'Revisit what you saw in Try →'
     },
     download: {
-      version:'Latest version — v0.1.0 (placeholder)',
+      version:'Latest version — v1.0.0',
       dl:'Download',
       guide:'Installation guide',
-      note_dl:(os,name)=> 'Downloaded a dummy file for ' + os + ': "' + name + '" (test only)'
+      note_dl:(os,name)=> 'Started downloading ' + name + ' for ' + os
     }
   }
 };
@@ -140,10 +140,17 @@ const MODE_KEYS = ['insect','plant','fossil','artifact','general'];
 const STAGE_KEYS = ['original','lasso','feature','edge','handfix'];
 const TOPTAB_STAGE_COUNT = 5; // 元写真〜手書き修正まで、すべてタブで直接切替できる
 const SAMPLE_GLYPH = '●';
+
+// SketchAssist本体（実際のアプリ）v1.0.0 のGitHub Releases直リンク
+const SKETCHASSIST_VERSION = '1.0.0';
+const SKETCHASSIST_RELEASE_BASE_URL =
+  'https://github.com/SketchAssist/SketchAssist/releases/download/v' + SKETCHASSIST_VERSION + '/';
+
 const OS_LIST = [
-  { key:'Windows', ext:'exe' },
-  { key:'macOS', ext:'dmg' },
-  { key:'Linux', ext:'AppImage' }
+  { key:'Windows', file:'SketchAssist-Setup-1.0.0.exe' },
+  { key:'macOS (Intel)', file:'SketchAssist-1.0.0.dmg' },
+  { key:'macOS (Apple Silicon)', file:'SketchAssist-1.0.0-arm64.dmg' },
+  { key:'Linux', file:'SketchAssist-1.0.0.AppImage' }
 ];
 
 const IMAGE_DIR = 'picture/'; // css/・js/と並ぶ画像フォルダ
